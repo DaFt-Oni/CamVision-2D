@@ -1,0 +1,25 @@
+{
+  "format": "optivision",
+  "version": 1,
+  "project": {
+    "name": "Demostración 10 × 8",
+    "space": {
+      "width": 10,
+      "height": 8,
+      "cellSize": 0.25
+    },
+    "cameras": [
+      {
+        "id": "c1",
+        "name": "Cámara 01",
+        "x": 0,
+        "y": 0,
+        "angle": 45,
+        "fov": 90,
+        "range": 6,
+        "color": "#27786b"
+      }
+    ],
+    "walls": []
+  }
+}

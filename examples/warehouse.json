@@ -1,0 +1,89 @@
+{
+  "format": "optivision",
+  "version": 1,
+  "project": {
+    "name": "Bodega y pasillos",
+    "space": {
+      "width": 20,
+      "height": 14,
+      "cellSize": 0.25
+    },
+    "cameras": [
+      {
+        "id": "c1",
+        "name": "Cámara 01",
+        "x": 1,
+        "y": 13,
+        "angle": 315,
+        "fov": 95,
+        "range": 14,
+        "color": "#27786b"
+      },
+      {
+        "id": "c2",
+        "name": "Cámara 02",
+        "x": 19,
+        "y": 13,
+        "angle": 225,
+        "fov": 95,
+        "range": 14,
+        "color": "#d18a3f"
+      },
+      {
+        "id": "c3",
+        "name": "Cámara 03",
+        "x": 1,
+        "y": 1,
+        "angle": 45,
+        "fov": 95,
+        "range": 13,
+        "color": "#5773b8"
+      },
+      {
+        "id": "c4",
+        "name": "Cámara 04",
+        "x": 19,
+        "y": 1,
+        "angle": 135,
+        "fov": 95,
+        "range": 13,
+        "color": "#9e68aa"
+      }
+    ],
+    "walls": [
+      {
+        "id": "w1",
+        "a": {
+          "x": 7,
+          "y": 3
+        },
+        "b": {
+          "x": 7,
+          "y": 11
+        }
+      },
+      {
+        "id": "w2",
+        "a": {
+          "x": 13,
+          "y": 3
+        },
+        "b": {
+          "x": 13,
+          "y": 11
+        }
+      },
+      {
+        "id": "w3",
+        "a": {
+          "x": 7,
+          "y": 7
+        },
+        "b": {
+          "x": 10,
+          "y": 7
+        }
+      }
+    ]
+  }
+}

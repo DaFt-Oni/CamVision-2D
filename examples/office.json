@@ -1,0 +1,68 @@
+{
+  "format": "optivision",
+  "version": 1,
+  "project": {
+    "name": "Oficina principal",
+    "space": {
+      "width": 16,
+      "height": 12,
+      "cellSize": 0.25
+    },
+    "cameras": [
+      {
+        "id": "c1",
+        "name": "Cámara 01",
+        "x": 1,
+        "y": 11,
+        "angle": 325,
+        "fov": 90,
+        "range": 11,
+        "color": "#27786b"
+      },
+      {
+        "id": "c2",
+        "name": "Cámara 02",
+        "x": 15,
+        "y": 11,
+        "angle": 220,
+        "fov": 90,
+        "range": 10,
+        "color": "#d18a3f"
+      },
+      {
+        "id": "c3",
+        "name": "Cámara 03",
+        "x": 8,
+        "y": 1,
+        "angle": 90,
+        "fov": 100,
+        "range": 9,
+        "color": "#5773b8"
+      }
+    ],
+    "walls": [
+      {
+        "id": "w1",
+        "a": {
+          "x": 5.5,
+          "y": 4
+        },
+        "b": {
+          "x": 5.5,
+          "y": 8
+        }
+      },
+      {
+        "id": "w2",
+        "a": {
+          "x": 10.5,
+          "y": 4
+        },
+        "b": {
+          "x": 13,
+          "y": 4
+        }
+      }
+    ]
+  }
+}

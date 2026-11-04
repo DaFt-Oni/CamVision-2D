@@ -1,0 +1,210 @@
+/* One workspace: shared tools above, canvas and properties share their upper edge. */
+.workbench .drawing-layout .simulator-grid {
+  display: block;
+  column-gap: 0;
+  max-width: 100%;
+}
+.workbench .integrated-editor {
+  border-radius: 7px;
+  box-shadow: 0 3px 12px #243b5a05;
+}
+.integrated-editor .editor-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 0;
+  align-items: stretch;
+  min-width: 0;
+}
+.editor-viewport {
+  min-width: 0;
+  overflow: hidden;
+}
+.workbench .integrated-editor .plan-heading {
+  min-height: 72px;
+  padding: 13px 17px;
+}
+.workbench .integrated-editor .plan-heading h2 {
+  font-size: 16px;
+  font-weight: 600;
+}
+.workbench .integrated-editor .plan-heading p {
+  font-size: 11px;
+}
+.workbench .integrated-editor .plan-toolbar {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  min-height: 48px;
+  padding: 8px 12px;
+  gap: 8px 14px;
+}
+.workbench .integrated-editor .drawing-view-tools {
+  width: auto;
+  padding: 0;
+  border: 0;
+  margin-left: auto;
+  gap: 8px;
+}
+.integrated-editor .view-navigation {
+  padding: 5px 12px;
+  min-height: 42px;
+}
+.integrated-editor .navigation-help {
+  font-size: 11px;
+  max-width: none;
+}
+.integrated-editor .view-navigation button {
+  min-height: 30px;
+  padding: 5px 7px;
+}
+.workbench .integrated-editor .inspector-slot {
+  height: auto;
+  min-height: 0;
+}
+.workbench .integrated-editor .inspector-slot .parameters {
+  inset: 0;
+  margin: 0;
+  border: 0;
+  border-left: 1px solid #c9d5e4;
+  border-radius: 0;
+  box-shadow: none;
+}
+.integrated-editor .inspector-heading {
+  min-height: 42px;
+  padding: 9px 13px;
+  background: #f8fafd;
+}
+.integrated-editor .inspector-heading h2 {
+  font-size: 13px;
+  font-weight: 600;
+}
+.integrated-editor .inspector-heading > span {
+  font-size: 8px;
+}
+.integrated-editor .inspector-tabs {
+  padding: 0 5px;
+}
+.integrated-editor .inspector-tabs > button {
+  min-height: 36px;
+  font-size: 11px;
+  padding: 9px 5px;
+}
+.integrated-editor .inspector-section {
+  padding: 12px;
+  gap: 12px;
+}
+.integrated-editor .inspector-section-title h3 {
+  font-size: 12px;
+  font-weight: 500;
+}
+.integrated-editor .inspector .small-action {
+  min-height: 30px;
+  font-size: 11px;
+  padding: 5px 8px;
+}
+.integrated-editor .inspector .object-picker {
+  padding: 9px;
+}
+.integrated-editor .inspector .selected-properties {
+  gap: 12px;
+}
+.integrated-editor .parameter-group {
+  gap: 10px;
+  padding-top: 9px;
+}
+.integrated-editor .parameter-group legend {
+  font-size: 11px;
+}
+.integrated-editor .inspector .field-help {
+  font-size: 10px;
+  margin: 0;
+}
+.integrated-editor .inspector .field-grid {
+  gap: 10px;
+}
+.integrated-editor .inspector-footer {
+  padding: 8px 12px;
+}
+.object-options {
+  border-top: 1px solid #d6dfe9;
+  padding-top: 8px;
+}
+.object-options summary {
+  min-height: 30px;
+  padding: 5px 0;
+  cursor: pointer;
+  font-size: 11px;
+  color: #46617f;
+}
+.object-options .select-field {
+  margin: 10px 0;
+}
+.object-options .delete-object {
+  width: 100%;
+  margin-top: 10px;
+}
+.workbench .integrated-editor .plan-status {
+  padding: 9px 13px;
+}
+.workbench .integrated-editor .legend {
+  min-height: 35px;
+  padding: 9px 13px;
+}
+@media (max-width: 950px) {
+  .integrated-editor .editor-stage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .workbench .integrated-editor .inspector-slot {
+    height: 380px;
+  }
+  .workbench .integrated-editor .inspector-slot .parameters {
+    border-left: 0;
+    border-top: 1px solid #c9d5e4;
+  }
+}
+@media (max-width: 600px) {
+  .workbench .integrated-editor .plan-heading {
+    padding: 12px;
+  }
+  .workbench .integrated-editor .plan-toolbar {
+    padding: 8px;
+  }
+  .workbench .integrated-editor .drawing-tools {
+    width: 100%;
+  }
+  .workbench .integrated-editor .drawing-view-tools {
+    width: 100%;
+    margin: 0;
+  }
+  .integrated-editor .navigation-help {
+    width: 100%;
+    font-size: 10px;
+  }
+  .integrated-editor .view-navigation {
+    gap: 4px;
+    padding: 5px 8px;
+  }
+  .integrated-editor .inspector-section {
+    padding: 12px;
+  }
+}
+@media print {
+  .integrated-editor .editor-stage {
+    display: block;
+  }
+  .integrated-editor .inspector-slot {
+    display: none;
+  }
+}
+.integrated-editor .object-picker-label {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+.object-picker-label i {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 50%;
+}

@@ -1,0 +1,106 @@
+:root {
+  font-family: 'Segoe UI', Inter, Arial, sans-serif;
+  color: #172b46;
+  background: #f1f4f8;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 14px;
+  line-height: 1.5;
+  color-scheme: light;
+  --ink: #172b46;
+  --muted: #53647b;
+  --subtle: #65758b;
+  --surface: #fff;
+  --canvas: #f1f4f8;
+  --border: #ced8e5;
+  --primary: #2455ca;
+  --primary-dark: #163e9a;
+  --navy: #142238;
+  --teal: #087f6b;
+  --violet: #7452b5;
+  --orange: #ae4c1c;
+  --radius: 6px;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 360px;
+}
+button,
+input,
+select {
+  font: inherit;
+}
+button {
+  color: inherit;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+button,
+a,
+input,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid #3875ef;
+  outline-offset: 3px;
+}
+button svg,
+svg {
+  flex-shrink: 0;
+}
+h1,
+h2,
+h3,
+p,
+dl,
+dd {
+  margin: 0;
+}
+input,
+select {
+  min-width: 0;
+}
+::selection {
+  background: #c7dafa;
+  color: #122b55;
+}
+.sr-only {
+  position: absolute !important;
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+code {
+  font-family: 'Cascadia Code', Consolas, monospace;
+  font-size: 12px;
+}
+button:active:not(:disabled) {
+  transform: translateY(1px);
+}
