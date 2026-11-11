@@ -31,7 +31,7 @@ npm run preview  # Sirve la versión compilada, normalmente en el puerto 4173
 
 La copia de referencia **v0.1.0** está en `../versiones/OptiVision-v0.1.0.zip`, junto a `RESTAURAR-v0.1.0.md`. Se creó y verificó antes de modificar el control de tamaño. Contiene fuentes, lockfile, pruebas, documentación y la compilación existente; omite node_modules. El manifiesto del ZIP permite comprobar los archivos por SHA-256.
 
-Esta revisión de trabajo es **v0.1.6**. Para comparar ambas sin reemplazar archivos, extrae la copia en otra carpeta, ejecuta npm ci y sirve la referencia con `npm run dev -- --port 5174`. El proyecto actual conserva su carpeta y su puerto habituales.
+Esta revisión de trabajo es **v0.1.7**. Para comparar ambas sin reemplazar archivos, extrae la copia en otra carpeta, ejecuta npm ci y sirve la referencia con `npm run dev -- --port 5174`. El proyecto actual conserva su carpeta y su puerto habituales.
 
 ### Tamaño del cuadro
 
@@ -45,7 +45,7 @@ La barra de navegación está separada de las herramientas de edición y de las 
 
 La aplicación abre en un **menú principal tipo Metro**. La entrada al Simulador abre un modal para crear un escenario en blanco, cargar proyectos locales o elegir un ejemplo. Debajo están Archivos del proyecto (configuraciones e importación) y Escenarios de ejemplo. Análisis y Matemáticas se consultan dentro del simulador, sin tarjetas secundarias en el menú.
 
-El espacio de trabajo no tiene barra lateral de navegación. La cabecera reúne el regreso al menú y el nombre del proyecto. Los indicadores son compactos y el marco del plano adapta su altura a las proporciones del recinto, sin reducirlo a una franja horizontal. La selección de objetos no cambia sus dimensiones. El plano y Parámetros comparten un único marco, con herramientas comunes. En escritorio, el panel queda pegado al lienzo y ambos comienzan a la misma altura. El inspector tiene pestañas **Espacio**, **Cámaras** y **Paredes**, con desplazamiento interno: seleccionar un objeto no agranda el plano ni el inspector. Al seleccionar en el plano se muestran los parámetros del objeto y se vuelve al inicio del panel.
+El espacio de trabajo no tiene barra lateral de navegación. La cabecera reúne el regreso al menú y el nombre del proyecto. Los indicadores son compactos y el marco del plano adapta su altura a las proporciones del recinto, sin reducirlo a una franja horizontal. La selección de objetos no cambia sus dimensiones. El plano y Parámetros comparten un único marco, con herramientas comunes. En escritorio, el panel queda pegado al lienzo y ambos comienzan a la misma altura. El inspector tiene pestañas **Espacio**, **Cámaras**, **Paredes** y **Medición**, con desplazamiento interno: seleccionar un objeto no agranda el plano ni el inspector. Al seleccionar en el plano se muestran los parámetros del objeto y se vuelve al inicio del panel.
 
 Debajo del plano están las pestañas **Resumen**, **Análisis** y **Matemáticas**. El plano permanece montado al cambiar de herramienta, conservando su vista y zoom. Resumen combina distribución de superficies, lectura del análisis y cálculos de la cámara elegida. La matriz se muestra exclusivamente mediante **Vista Matriz** sobre el mismo recinto: misma escala, paredes, cámaras y coordenadas. No se recorta ni se representa una submatriz aislada.
 
@@ -78,6 +78,27 @@ También se incluyen escenarios de oficina, bodega y espacio vacío. Los archivo
 - **Cambio de dimensiones**: las cámaras se ajustan al nuevo rectángulo. Los extremos de las paredes se ajustan y los segmentos que quedan sin longitud se eliminan.
 - **Zoom y encuadre**: + y − permiten entre 50 % y 400 %. Seleccionar permite arrastrar el fondo para desplazar el encuadre sin mover cámaras; Ajustar plano vuelve a mostrar el recinto completo. X e Y conservan la misma escala. Los ejes tienen tipografía de 12 px y los iconos mantienen su tamaño al ampliar. La regla de metros se calcula a partir de la escala real de pantalla.
 - **Vista Matriz**: cambia entre Cobertura, Matriz y Puntos ciegos desde la barra del plano. Matriz representa las mismas celdas usadas por el cálculo, con filas creciendo desde abajo. Acerca para leer los conteos y selecciona una celda para consultar su valor.
+
+## Triangulación entre dos cámaras
+
+En **Parámetros → Medición**, selecciona cámaras distintas A y B. La base b = AB se calcula con sus posiciones, en metros. Puedes elegir **Punto del plano**, hacer clic en el recinto o seleccionar un extremo de pared; o usar **Ángulos medidos** para introducir φ₁ = ∠BAP y φ₂ = ∠ABP. Estos ángulos interiores no son la apertura ni la orientación de las cámaras.
+
+```text
+γ = 180° − φ₁ − φ₂
+AP = b · sen(φ₂) / sen(γ)
+BP = b · sen(φ₁) / sen(γ)
+b_comprobada = √(AP² + BP² − 2 · AP · BP · cos γ)
+```
+
+En modo de ángulos hay dos puntos reflejados sobre AB: el selector **Lado de la base A → B** determina cuál se dibuja. Izquierda y derecha se refieren a las coordenadas físicas del recinto; girar o voltear la vista no cambia el resultado.
+
+Se rechazan bases menores de 0,000001 m, cámaras coincidentes, valores no finitos y triángulos con un ángulo inferior a 0,01°. También se advierte la sensibilidad cuando algún ángulo es menor de 1°. La ley de cosenos comprueba la base con tolerancia relativa 10⁻⁸; en el modo de punto se contrastan además las distancias cartesianas y la reconstrucción de P. Se mantienen todos los decimales durante el cálculo.
+
+La visibilidad se verifica por separado: alcance, apertura y paredes anteriores a P. El contacto exactamente en P se permite para medir una esquina de pared. Esto no altera la semántica de contacto del cálculo de cobertura. Si P queda fuera del recinto se muestran sus coordenadas y una advertencia; el dibujo se recorta al plano.
+
+**Ejemplo listo para probar:** carga **Escenarios → Triangulación 6–5–5** y abre **Medición**. A = (2; 2), B = (8; 2) y P = (5; 6), extremo inferior de la pared. La base es 6 m y las distancias son 5 m. En modo Ángulos medidos, φ₁ = φ₂ = 53,1301° produce γ = 73,7398° y AP ≈ BP ≈ 5 m.
+
+**Ver cálculo de senos y cosenos** abre el desarrollo dinámico en Matemáticas. El informe TXT incluye los valores de la medición cuando el triángulo está activado y es válido. La selección de cámaras, el punto de prueba y los ángulos de medición son controles de la sesión; el JSON conserva la geometría del proyecto para repetir la medición.
 
 ## Modelo matemático
 

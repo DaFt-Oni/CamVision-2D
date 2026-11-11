@@ -5,6 +5,7 @@ import Icon from './Icon.jsx'
 import { MAX_CAMERAS, MAX_WALLS } from '../lib/project.js'
 import { directionVector } from '../lib/geometry.js'
 import { format } from '../lib/format.js'
+import { TriangulationControls } from './Triangulation.jsx'
 
 /** Fixed-size inspector: selecting an object never changes the plan's dimensions. */
 export default function Parameters({
@@ -23,6 +24,12 @@ export default function Parameters({
   frameSettings,
   frameScale,
   onFrameSettings,
+  triangulationSettings,
+  triangulation,
+  onTriangulation,
+  onExplainTriangulation,
+  probe,
+  onProbe,
 }) {
   const contentRef = useRef(null)
   useEffect(() => {
@@ -45,7 +52,9 @@ export default function Parameters({
             ? 'RECINTO'
             : tab === 'cameras'
               ? `${project.cameras.length} CÁMARAS`
-              : `${project.walls.length} PAREDES`}
+              : tab === 'triangulation'
+                ? 'TRIANGULACIÓN'
+                : `${project.walls.length} PAREDES`}
         </span>
       </div>
       <div className="inspector-tabs" role="tablist" aria-label="Parámetros del plano">
@@ -53,6 +62,7 @@ export default function Parameters({
           ['space', 'grid', 'Espacio'],
           ['cameras', 'camera', 'Cámaras'],
           ['walls', 'wall', 'Paredes'],
+          ['triangulation', 'target', 'Medición'],
         ].map(([id, icon, label]) => (
           <button
             key={id}
@@ -60,7 +70,9 @@ export default function Parameters({
             role="tab"
             aria-selected={tab === id}
             tabIndex={tab === id ? 0 : -1}
-            onKeyDown={(event) => navigateTabs(event, ['space', 'cameras', 'walls'], tab, onTab)}
+            onKeyDown={(event) =>
+              navigateTabs(event, ['space', 'cameras', 'walls', 'triangulation'], tab, onTab)
+            }
             aria-controls="inspector-content"
             onClick={() => onTab(id)}
           >
@@ -76,6 +88,17 @@ export default function Parameters({
         role="tabpanel"
         aria-labelledby={`inspector-tab-${tab}`}
       >
+        {tab === 'triangulation' && (
+          <TriangulationControls
+            project={project}
+            settings={triangulationSettings}
+            data={triangulation}
+            probe={probe}
+            onProbe={onProbe}
+            onChange={onTriangulation}
+            onExplain={onExplainTriangulation}
+          />
+        )}
         {tab === 'space' && (
           <div className="inspector-section">
             <div className="inspector-section-title">

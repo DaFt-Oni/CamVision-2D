@@ -77,6 +77,20 @@ export const SCENARIOS = [
       walls: [],
     },
   },
+  {
+    id: 'triangulation',
+    label: 'Triangulación 6–5–5',
+    description: '10 × 12 m · base 6 m · referencia en (5; 6)',
+    project: {
+      name: 'Triangulación 6–5–5',
+      space: { width: 10, height: 12, cellSize: 0.25 },
+      cameras: [
+        camera('c1', 2, 2, 53.13010235415598, 80, 8, 0),
+        camera('c2', 8, 2, 126.86989764584402, 80, 8, 1),
+      ],
+      walls: [{ id: 'w1', a: { x: 5, y: 6 }, b: { x: 5, y: 10 } }],
+    },
+  },
 ]
 export function resizeProject(project, changes) {
   const space = { ...project.space, ...changes }

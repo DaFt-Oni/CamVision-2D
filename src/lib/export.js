@@ -35,7 +35,24 @@ export function exportMatrix(project, result) {
   )
   download('\ufeff' + lines.join('\n'), 'camvision-matriz.csv', 'text/csv;charset=utf-8')
 }
-export function exportReport(project, result) {
+export function describeTriangulation(data) {
+  if (!data?.valid) return ''
+  const n = (value) => value.toFixed(6)
+  return `\nTRIANGULACIÓN ENTRE DOS CÁMARAS
+A: ${data.a.name} (${n(data.a.x)}, ${n(data.a.y)}) m
+B: ${data.b.name} (${n(data.b.x)}, ${n(data.b.y)}) m
+P: (${n(data.point.x)}, ${n(data.point.y)}) m; lado: ${data.side === 'left' ? 'izquierda' : 'derecha'} de A hacia B
+b = AB = ${n(data.base)} m; φ₁ = ${n(data.phi1)}°; φ₂ = ${n(data.phi2)}°
+γ = 180° − φ₁ − φ₂ = ${n(data.gamma)}°
+AP = b × sen(φ₂) / sen(γ) = ${n(data.ap)} m
+BP = b × sen(φ₁) / sen(γ) = ${n(data.bp)} m
+Ley de cosenos: bᶜ = √(AP² + BP² − 2 AP BP cos γ) = ${n(data.cosineBase)} m
+Error |bᶜ − b| = ${data.cosineError.toExponential(3)} m; consistencia relativa ≤ 10⁻⁸: ${data.consistent ? 'sí' : 'no'}
+P en el recinto: ${data.insideRoom ? 'sí' : 'no'}; observable desde A: ${data.sightA.visible ? 'sí' : 'no'}; desde B: ${data.sightB.visible ? 'sí' : 'no'}
+Se admite contacto con una pared exactamente en P como referencia; un obstáculo anterior bloquea la medición.
+`
+}
+export function exportReport(project, result, triangulation) {
   const n = (value) => value.toFixed(2)
   const metrics = (r) =>
     `Cámaras: ${r.cameraCount}\nCobertura: ${n(r.coverage)} % (${n(r.coveredArea)} m²)\nPuntos ciegos: ${n(r.blind)} % (${n(r.blindArea)} m²)\nSuperposición: ${n(r.overlap)} % (${n(r.overlapArea)} m²)`
@@ -59,6 +76,7 @@ ${project.cameras.map((c) => `${c.name} [${c.id}]: (${c.x}, ${c.y}) m; θ=${c.an
 PAREDES (segmentos sin espesor)
 ${project.walls.map((w, i) => `${i + 1}. (${w.a.x}, ${w.a.y}) → (${w.b.x}, ${w.b.y}) m`).join('\n') || 'Sin paredes.'}
 
+${describeTriangulation(triangulation)}
 MODELO MATEMÁTICO
 Vector unitario u = (cos θ, sen θ). Extremo = (x₀ + d cos θ, y₀ + d sen θ).
 Ancho teórico del campo a distancia axial d: A = 2d tan(α/2).

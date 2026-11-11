@@ -136,7 +136,7 @@ export default function Home({
       </div>
       <footer className="home-footer">
         <span>CamVision · Simulación y evaluación de cobertura de videovigilancia</span>
-        <span>Modelo geométrico 2D · Versión 0.1.6</span>
+        <span>Modelo geométrico 2D · Versión 0.1.7</span>
       </footer>
     </div>
   )

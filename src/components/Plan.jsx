@@ -13,6 +13,7 @@ import { format } from '../lib/format.js'
 import useElementSize from '../hooks/useElementSize.js'
 import Icon from './Icon.jsx'
 import { Legend } from './Controls.jsx'
+import { TriangulationOverlay } from './Triangulation.jsx'
 
 export default function Plan({
   project,
@@ -32,6 +33,8 @@ export default function Plan({
   layer,
   onLayer,
   inspector,
+  triangulation,
+  measurementPick,
 }) {
   const { space, cameras, walls } = project
   const [canvasRef, size] = useElementSize()
@@ -485,6 +488,19 @@ export default function Plan({
                       aria-label={`Seleccionar pared ${i + 1}`}
                       onClick={(event) => {
                         event.stopPropagation()
+                        if (measurementPick) {
+                          const p = position(event, false)
+                          const nearest = [wall.a, wall.b].sort(
+                            (a, b) =>
+                              Math.hypot(a.x - p.x, a.y - p.y) - Math.hypot(b.x - p.x, b.y - p.y),
+                          )[0]
+                          onProbe(
+                            Math.hypot(nearest.x - p.x, nearest.y - p.y) <= 12 * u
+                              ? { ...nearest }
+                              : p,
+                          )
+                          return
+                        }
                         onSelect(wall.id)
                         changeTool('select')
                       }}
@@ -541,6 +557,7 @@ export default function Plan({
                       ))}
                     </g>
                   ))}
+                  <TriangulationOverlay data={triangulation} units={u} orientation={orientation} />
                   {cameras.map((camera, i) => (
                     <g
                       key={camera.id}

@@ -6,6 +6,7 @@ import Analysis, { Metrics } from './components/Analysis.jsx'
 import Mathematics from './components/Mathematics.jsx'
 import { navigateTabs } from './lib/accessibility.js'
 import { calculateCoverage } from './lib/coverage.js'
+import { evaluateTriangulation, initialTriangulation } from './lib/triangulation.js'
 import {
   COLORS,
   MAX_CAMERAS,
@@ -34,11 +35,15 @@ import './Workbench.css'
 import './ProjectManager.css'
 import './Editor.css'
 import './Feedback.css'
+import './Triangulation.css'
 
 function App() {
   const workspace = useProjectWorkspace()
   const { toast, showToast, dismissToast } = useToast()
   const { project, setProject, library, setLibrary, storageError } = workspace
+  const [triangulationSettings, setTriangulationSettings] = useState(() =>
+    initialTriangulation(project),
+  )
   const [frameSettings, setFrameSettings] = useState(loadFrameSettings)
   const [pendingAction, setPendingAction] = useState(null)
   const [confirmation, setConfirmation] = useState(null)
@@ -55,6 +60,32 @@ function App() {
   const fileRef = useRef(null),
     dialogRef = useRef(null)
   const result = useMemo(() => calculateCoverage(project), [project])
+  const triangulation = useMemo(
+    () => evaluateTriangulation(project, triangulationSettings, probe),
+    [project, triangulationSettings, probe],
+  )
+  const updateTriangulation = (changes) =>
+    setTriangulationSettings((previous) => ({ ...previous, ...changes }))
+  const changeInspectorTab = (tab) => {
+    setInspectorTab(tab)
+    if (tab === 'triangulation') {
+      updateTriangulation({ enabled: true })
+      setTool('select')
+      setWallStart(null)
+    }
+  }
+  const configureTriangulation = () => {
+    changeInspectorTab('triangulation')
+    document.querySelector('.plan-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+  const explainTriangulation = () => {
+    setActiveTab('math')
+    requestAnimationFrame(() =>
+      document
+        .getElementById('triangulation-math')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+    )
+  }
   const camera = project.cameras.find((c) => c.id === selected)
   const { ref: drawingLayoutRef, frame } = useDrawingFrame(
     project.space,
@@ -104,6 +135,7 @@ function App() {
     setSelected(next.cameras[0]?.id || null)
     setInspectorTab(next.cameras.length ? 'cameras' : 'space')
     setProbe(null)
+    setTriangulationSettings(initialTriangulation(next))
     changeTool('select')
     setMenu(null)
     setModal(null)
@@ -296,7 +328,8 @@ function App() {
     setMenu(null)
     try {
       if (type === 'json') exportProject(project)
-      if (type === 'txt') exportReport(project, result)
+      if (type === 'txt')
+        exportReport(project, result, triangulationSettings.enabled ? triangulation : null)
       if (type === 'csv') exportMatrix(project, result)
       showToast('Archivo exportado. Revisa tus descargas.', { title: 'Exportación completada' })
     } catch {
@@ -481,13 +514,25 @@ function App() {
                     onTool={changeTool}
                     layer={planLayer}
                     onLayer={setPlanLayer}
+                    triangulation={triangulationSettings.enabled ? triangulation : null}
+                    measurementPick={
+                      inspectorTab === 'triangulation' &&
+                      triangulationSettings.mode === 'point' &&
+                      triangulationSettings.target === 'probe'
+                    }
                     inspector={
                       <Parameters
                         project={project}
                         result={result}
                         selected={selected}
                         tab={inspectorTab}
-                        onTab={setInspectorTab}
+                        onTab={changeInspectorTab}
+                        triangulationSettings={triangulationSettings}
+                        triangulation={triangulation}
+                        onTriangulation={updateTriangulation}
+                        onExplainTriangulation={explainTriangulation}
+                        probe={probe}
+                        onProbe={setProbe}
                         frameSettings={frameSettings}
                         frameScale={frame.effectiveScale}
                         onFrameSettings={setFrameSettings}
@@ -595,6 +640,8 @@ function App() {
                       onCamera={selectObject}
                       probe={probe}
                       onProbe={setProbe}
+                      triangulation={triangulation}
+                      onConfigureTriangulation={configureTriangulation}
                       onShowMatrix={() => {
                         setPlanLayer('matrix')
                         document
@@ -735,6 +782,18 @@ function App() {
                       Carga el escenario 10 × 8 m. Selecciona una cámara en Matemáticas, revisa sus
                       cálculos y prueba un punto para comprobar alcance, ángulo y paredes. Exporta
                       el informe.
+                    </p>
+                  </span>
+                </div>
+                <div>
+                  <b>05</b>
+                  <span>
+                    <strong>Triangula un punto entre dos cámaras</strong>
+                    <p>
+                      En Parámetros → Medición, elige A y B y un punto del plano, un extremo de
+                      pared o dos ángulos interiores. Matemáticas muestra las leyes de senos y
+                      cosenos. El ejemplo Triangulación 6–5–5 incluye una base de 6 m y una esquina
+                      a 5 m de ambas cámaras.
                     </p>
                   </span>
                 </div>

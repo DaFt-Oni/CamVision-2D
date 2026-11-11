@@ -4,6 +4,8 @@ import { cameraMath } from '../lib/mathematics.js'
 import { NumberField, SectionHeading } from './Controls.jsx'
 import { exportMatrix } from '../lib/export.js'
 import Icon from './Icon.jsx'
+import Calculation from './Calculation.jsx'
+import { TriangulationDetails } from './Triangulation.jsx'
 
 const pair = (point, digits = 3) => `(${format(point.x, digits)}; ${format(point.y, digits)})`
 const cameraName = (camera) =>
@@ -31,36 +33,6 @@ export function CameraSelector({ project, camera, onCamera, label = 'Cámara de 
         ))}
       </select>
     </label>
-  )
-}
-
-function Calculation({ number, title, formula, substitution, answer, children }) {
-  return (
-    <article className="calculation-step">
-      <div className="calculation-title">
-        <span>{number}</span>
-        <h3>{title}</h3>
-      </div>
-      <dl>
-        <div>
-          <dt>Fórmula</dt>
-          <dd>
-            <code>{formula}</code>
-          </dd>
-        </div>
-        <div>
-          <dt>Sustitución</dt>
-          <dd>
-            <code>{substitution}</code>
-          </dd>
-        </div>
-        <div className="calculation-answer">
-          <dt>Resultado</dt>
-          <dd>{answer}</dd>
-        </div>
-      </dl>
-      <p className="calculation-meaning">{children}</p>
-    </article>
   )
 }
 
@@ -121,6 +93,8 @@ export default function Mathematics({
   probe,
   onProbe,
   onShowMatrix,
+  triangulation,
+  onConfigureTriangulation,
 }) {
   const c = camera || project.cameras[0]
   const point = probe || { x: project.space.width / 2, y: project.space.height / 2 }
@@ -128,6 +102,7 @@ export default function Mathematics({
   const math = c ? cameraMath(c, project.space, project.walls) : null
   return (
     <div className="mathematics explained-math">
+      <TriangulationDetails data={triangulation} onConfigure={onConfigureTriangulation} />
       <section className="panel">
         <SectionHeading
           eyebrow="01 / TRIGONOMETRÍA Y VECTORES"

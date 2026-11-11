@@ -1,5 +1,13 @@
 # Cambios
 
+## v0.1.7 — Triangulación entre dos cámaras
+
+- Medición junto al plano a partir de dos cámaras y un punto común, incluidos extremos de paredes.
+- Reconstrucción de P con base AB y ángulos interiores mediante la ley de senos, con selección de la solución reflejada.
+- Comprobación de la base con la ley de cosenos, distancias y ángulos dinámicos en Matemáticas.
+- Validación de triángulos degenerados, sensibilidad de ángulos pequeños y comprobación separada de visibilidad.
+- Ejemplo 6–5–5 e inclusión de la medición activa en el informe TXT.
+
 ## v0.1.6 — Avisos propios
 
 - Toasts propios con variantes de éxito, información, advertencia y error, visibles también dentro de los modales.

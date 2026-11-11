@@ -122,7 +122,7 @@ export function ProjectLauncher({ library, project, onOpen, onImport }) {
               <Icon name="grid" size={22} />
               <span>
                 <strong>Usar un escenario de ejemplo</strong>
-                <small>Oficina, demostración académica o bodega.</small>
+                <small>Oficina, demostración académica, bodega o triangulación.</small>
               </span>
               <Icon name="chevron" size={16} />
             </button>

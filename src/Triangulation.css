@@ -1,0 +1,137 @@
+.inspector-tabs {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.inspector-tabs > button {
+  min-width: 0;
+  padding-inline: 3px;
+  font-size: 10px;
+  gap: 4px;
+}
+.inspector-tabs > button svg {
+  flex-shrink: 0;
+}
+.integrated-editor .inspector-tabs > button {
+  padding-inline: 3px;
+  font-size: 10px;
+}
+.integrated-editor .inspector-tabs > button svg {
+  width: 13px;
+  height: 13px;
+}
+.triangulation-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.triangulation-controls > .field-help {
+  margin: 0;
+}
+.triangulation-controls .field-grid {
+  align-items: start;
+}
+.triangulation-controls .select-field {
+  min-width: 0;
+  margin: 0;
+}
+.triangulation-toggle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12px;
+  color: #334d70;
+}
+.triangulation-toggle input {
+  accent-color: #5b4192;
+  width: 16px;
+  height: 16px;
+}
+.triangulation-results {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  margin: 0;
+  border-top: 1px solid #d5deeb;
+}
+.triangulation-results > div {
+  padding: 10px 6px 10px 0;
+  border-bottom: 1px solid #e0e6ef;
+  min-width: 0;
+}
+.triangulation-results dt {
+  color: #5b6f8b;
+  font-size: 11px;
+}
+.triangulation-results dd {
+  margin: 5px 0 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #203e67;
+  overflow-wrap: anywhere;
+}
+.triangulation-check,
+.triangulation-context {
+  font-size: 13px;
+  color: #36567f;
+  line-height: 1.7;
+}
+.triangulation-error,
+.triangulation-warning {
+  padding: 10px 12px;
+  margin: 0;
+  border-left: 3px solid #a74b26;
+  background: #fff5ee;
+  color: #813c23;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.triangulation-error {
+  border-left-color: #af3333;
+  background: #fff3f3;
+  color: #8d2929;
+}
+.triangulation-controls [aria-invalid='true'] {
+  border-color: #b14b4b;
+}
+.triangulation-sight {
+  border-top: 1px solid #d6deea;
+  padding-top: 12px;
+  font-size: 12px;
+  color: #405a7a;
+  line-height: 1.7;
+}
+.triangulation-sight p {
+  margin: 5px 0;
+}
+.triangulation-controls .btn {
+  width: 100%;
+  justify-content: center;
+  font-size: 11px;
+}
+.triangulation-details .section-heading {
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.triangulation-details .triangulation-sight {
+  margin-top: 20px;
+  font-size: 13px;
+}
+.triangulation-details .triangulation-sight h3 {
+  font-size: 14px;
+}
+.triangulation-example {
+  border-top: 1px solid #d6deea;
+  padding-top: 16px;
+  margin-top: 22px;
+  font-size: 13px;
+  line-height: 1.8;
+  color: #405a7a;
+}
+.triangulation-details {
+  scroll-margin-top: 18px;
+}
+@media (max-width: 400px) {
+  .inspector-tabs > button {
+    flex-direction: column;
+    gap: 4px;
+  }
+}
