@@ -31,7 +31,7 @@ npm run preview  # Sirve la versión compilada, normalmente en el puerto 4173
 
 La copia de referencia **v0.1.0** está en `../versiones/OptiVision-v0.1.0.zip`, junto a `RESTAURAR-v0.1.0.md`. Se creó y verificó antes de modificar el control de tamaño. Contiene fuentes, lockfile, pruebas, documentación y la compilación existente; omite node_modules. El manifiesto del ZIP permite comprobar los archivos por SHA-256.
 
-Esta revisión de trabajo es **v0.1.8**. Para comparar ambas sin reemplazar archivos, extrae la copia en otra carpeta, ejecuta npm ci y sirve la referencia con `npm run dev -- --port 5174`. El proyecto actual conserva su carpeta y su puerto habituales.
+Esta revisión de trabajo es **v0.1.9**. Para comparar ambas sin reemplazar archivos, extrae la copia en otra carpeta, ejecuta npm ci y sirve la referencia con `npm run dev -- --port 5174`. El proyecto actual conserva su carpeta y su puerto habituales.
 
 ### Tamaño del cuadro
 
@@ -101,6 +101,8 @@ La visibilidad se verifica por separado: alcance, apertura y paredes anteriores 
 **Ver cálculo de senos y cosenos** abre el desarrollo dinámico en Matemáticas. El informe TXT incluye los valores de la medición cuando el triángulo está activado y es válido. El proyecto local y el JSON conservan cámaras A/B, punto de prueba, modo, ángulos y lado de la medición. La cámara de los cálculos mantiene su selección aunque se inspeccione otro punto del plano.
 
 ## Mejoras de uso de v0.1.8
+
+La revisión pública de v0.1.8 detectó un falso conflicto de guardado al activar Medición sin elegir un punto P. **v0.1.9** normaliza las mediciones antes de compararlas y persistirlas, manteniendo la detección de conflictos reales entre pestañas.
 
 - Deshacer y rehacer desde la cabecera o con Ctrl/Cmd+Z y Ctrl/Cmd+Mayús+Z; Ctrl/Cmd+Y también rehace. Dentro de campos de texto se conserva la edición normal del navegador.
 - Paredes por dos clics o introduciendo las coordenadas de ambos extremos en un diálogo accesible por teclado.

@@ -83,11 +83,25 @@ export function loadWorkspace() {
   }
 }
 export function saveWorkspace(project, library) {
-  validateProject(project)
-  localStorage.setItem(WORKSPACE_KEY, JSON.stringify({ version: 1, project, library }))
+  const canonical = {
+    version: 1,
+    project: validateProject(project),
+    library: library.map((entry) => ({
+      ...entry,
+      project: validateProject(entry.project),
+      ...(entry.savedProject && { savedProject: validateProject(entry.savedProject) }),
+    })),
+  }
+  localStorage.setItem(WORKSPACE_KEY, JSON.stringify(canonical))
 }
 const fingerprint = (entry) =>
-  entry ? stableStringify([entry.project, entry.savedProject, entry.draft]) : null
+  entry
+    ? stableStringify([
+        validateProject(entry.project),
+        entry.savedProject ? validateProject(entry.savedProject) : undefined,
+        entry.draft,
+      ])
+    : null
 export class WorkspaceConflict extends Error {
   constructor() {
     super(

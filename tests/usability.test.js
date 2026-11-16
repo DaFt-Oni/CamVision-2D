@@ -9,9 +9,46 @@ import {
   saveWorkspace,
 } from '../src/lib/storage.js'
 import { coverageKey } from '../src/lib/coverageInput.js'
+import { initialTriangulation } from '../src/lib/triangulation.js'
 const date = '2026-11-16T12:00:00.000Z'
 const project = (id = 'one') => prepareProject(clone(SCENARIOS[0].project), { id })
 const entry = (p) => upsertProject([], p, date, true)[0]
+
+test('editar una medición nueva usa el mismo formato que guardar y recargar', () => {
+  const p = project()
+  const state = { project: p, library: [entry(p)], active: true, past: [], future: [] }
+  const edited = workspaceReducer(state, {
+    type: 'edit',
+    value: { ...p, measurement: { ...initialTriangulation(p), enabled: true } },
+    savedAt: date,
+  })
+  assert.deepEqual(edited.project, validateProject(edited.project))
+  assert.equal(edited.project.measurement.probe, null)
+})
+
+test('guardar una medición antigua sin probe no simula otra pestaña al volver a editar', (t) => {
+  storage(t)
+  const p = { ...project(), measurement: { ...initialTriangulation(project()), enabled: true } }
+  const base = { project: p, library: [entry(p)] }
+  saveWorkspace(p, base.library)
+  const remote = loadWorkspace()
+  const changed = { ...p, measurement: { ...p.measurement, angleA: '54' } }
+  const merged = mergeWorkspace(base, { project: changed, library: [entry(changed)] }, remote)
+  assert.equal(merged.project.measurement.angleA, '54')
+})
+
+test('eliminar una cámara o pared normaliza referencias de medición antes del preguardado', () => {
+  const p = project()
+  p.measurement = { ...initialTriangulation(p), target: `wall:${p.walls[0].id}:a` }
+  const state = { project: p, library: [entry(p)], active: true, past: [], future: [] }
+  const edited = workspaceReducer(state, {
+    type: 'edit',
+    value: { ...p, cameras: p.cameras.slice(1), walls: [] },
+    savedAt: date,
+  })
+  assert.deepEqual(edited.project, validateProject(edited.project))
+  assert.equal(edited.project.measurement.target, 'probe')
+})
 function storage(t) {
   const old = Object.getOwnPropertyDescriptor(globalThis, 'localStorage'),
     values = new Map()

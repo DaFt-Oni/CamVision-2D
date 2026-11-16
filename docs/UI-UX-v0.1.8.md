@@ -1,6 +1,8 @@
 # CamVision · Cierre de revisión UI/UX
 
-Fecha: 16/11/2026. Versión local: 0.1.8. La web pública se actualizará después de subir estos cambios a la rama conectada con Vercel. Este documento registra lo implementado; no certifica accesibilidad ni sustituye pruebas con usuarios y dispositivos físicos.
+Fecha: 16/11/2026. Versión pública 0.1.8 verificada en https://cam-vision.vercel.app/; sus archivos compilados coincidían con la compilación local revisada. Este documento registra lo implementado; no certifica accesibilidad ni sustituye pruebas con usuarios y dispositivos físicos.
+
+La revisión pública detectó además un falso conflicto de guardado al iniciar una medición sin punto P. La corrección está en **0.1.9, pendiente de publicación**: normalización coherente al editar, guardar y comparar versiones; 99 pruebas unitarias y recorridos de navegador superados en la compilación corregida, incluidos conflictos reales entre pestañas y salida sin guardar. La triangulación 6–5–5 de producción dio AP = BP = 5 m con comprobación consistente por cosenos. Los artefactos de esta revisión están en `tmp/public-review/`.
 
 | Hallazgo                                          | Cambio y alcance                                                                                                                                                                        |
 | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -11,7 +13,7 @@ Fecha: 16/11/2026. Versión local: 0.1.8. La web pública se actualizará despu�
 | UX05 · Inspector móvil lejano                     | Panel inferior desplegable desde el plano, con cierre y controles táctiles.                                                                                                             |
 | UX06 · Cabecera ocupa demasiado                   | Modo compacto inicial e indicadores desplegables. Se conserva la escala visual manual y el encuadre vertical del usuario.                                                               |
 | UX07 · Medición no se guarda                      | Estado de triangulación y punto incluidos en proyecto local, recuperación, JSON y deshacer/rehacer.                                                                                     |
-| UX08 · Producción no coincide con revisión        | Versión y fecha visibles; paquete y lockfile 0.1.8. **Pendiente: publicación mediante git push y verificación del despliegue.**                                                         |
+| UX08 · Producción no coincide con revisión        | Versión y fecha visibles; publicación 0.1.8 comprobada el 16/11. Corrección posterior 0.1.9 todavía pendiente de publicación.                                                           |
 | UX09 · Sin deshacer/rehacer                       | Historial de 60 cambios, agrupación de arrastres y atajos que respetan los campos de texto.                                                                                             |
 | UX10 · Guardado ambiguo                           | Diferenciación entre guardado explícito y recuperación, cambios pendientes, salida limpia directa y salida con guardar/descartar cuando corresponde.                                    |
 | UX11 · Rueda atrapa página                        | Rueda normal desplaza; Ctrl/Cmd+rueda y pellizco controlan zoom.                                                                                                                        |

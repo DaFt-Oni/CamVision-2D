@@ -1,5 +1,12 @@
 # Cambios
 
+## v0.1.9 — Corrección del guardado de mediciones (16/11/2026, pendiente de publicación)
+
+- Corregido un falso conflicto entre pestañas al activar y editar una medición que todavía no tenía punto de referencia.
+- Las mediciones se normalizan al abrir y editar proyectos, incluido el cambio o eliminación de sus cámaras y paredes de referencia.
+- El almacenamiento y la detección de conflictos usan el mismo formato validado, compatible con guardados anteriores. Se mantienen las advertencias ante ediciones reales desde otra pestaña.
+- Reproducción confirmada en producción v0.1.8 y tres pruebas de regresión añadidas para el caso y sus variantes.
+
 ## v0.1.8 — Revisión de usabilidad y guardado (16/11/2026, pendiente de publicación)
 
 - Confirmación de números al terminar de escribir, errores de rango visibles y protección frente a nombres vacíos.

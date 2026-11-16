@@ -1,7 +1,22 @@
 import { clone, PROJECT_ICONS, PROJECT_COLORS, SCENARIOS, uid } from './project.js'
+import { normalizeMeasurement } from './measurement.js'
+
+function normalizeProjectMeasurement(project) {
+  return project.measurement === undefined
+    ? project
+    : {
+        ...project,
+        measurement: normalizeMeasurement(
+          project.measurement,
+          project.cameras,
+          project.walls,
+          project.space,
+        ),
+      }
+}
 
 export function prepareProject(value, { fresh = false, now = new Date(), id = uid() } = {}) {
-  return {
+  return normalizeProjectMeasurement({
     ...clone(value),
     id: fresh ? id : value.id || id,
     name:
@@ -9,7 +24,7 @@ export function prepareProject(value, { fresh = false, now = new Date(), id = ui
       `Proyecto ${now.toLocaleDateString('es-CL')} ${now.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}`,
     icon: PROJECT_ICONS.includes(value.icon) ? value.icon : 'folder',
     color: /^#[0-9a-f]{6}$/i.test(value.color || '') ? value.color : PROJECT_COLORS[0],
-  }
+  })
 }
 
 /** Keep crash recovery separate from the last explicit save. */
@@ -48,7 +63,9 @@ export function workspaceReducer(state, action) {
     }
   }
   if (action.type === 'edit') {
-    const project = typeof action.value === 'function' ? action.value(state.project) : action.value
+    const project = normalizeProjectMeasurement(
+      typeof action.value === 'function' ? action.value(state.project) : action.value,
+    )
     if (JSON.stringify(project) === JSON.stringify(state.project)) return state
     const grouped =
       action.group &&
