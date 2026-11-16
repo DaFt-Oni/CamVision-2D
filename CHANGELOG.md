@@ -1,5 +1,22 @@
 # Cambios
 
+## v0.1.8 — Revisión de usabilidad y guardado (16/11/2026, pendiente de publicación)
+
+- Confirmación de números al terminar de escribir, errores de rango visibles y protección frente a nombres vacíos.
+- Recuperación individual de proyectos válidos, fusión de bibliotecas entre pestañas y resolución de conflictos con copia.
+- Deshacer/rehacer; persistencia de mediciones y selección matemática independiente del punto inspeccionado.
+- Cabecera compacta, inspector móvil desplegable, reflujo hasta 320 px, contraste y controles táctiles mejorados.
+- Rueda libre para desplazar la página, Ctrl/Cmd+rueda para zoom y pellizco táctil.
+- Creación de paredes por coordenadas, índice de Matemáticas, navegación Atrás/Adelante y explicación de superposición.
+- Biblioteca con búsqueda, miniaturas y duplicación; exportaciones PNG/SVG del plano.
+- Cálculo de cobertura en worker y agrupación de movimientos para reducir trabajo durante el arrastre.
+- Plantilla y verificador para preparar el futuro montaje del video por secciones, sin generar el video.
+
+- Primera salida con nombre, icono y color; opción de descartar el borrador sin guardar.
+- Confirmación simple para proyectos guardados: guardar y salir, salir sin guardar o seguir editando.
+- Preguardado de recuperación separado del último guardado explícito para restaurar los cambios al descartarlos.
+- Guardado directo y acceso independiente a las propiedades del proyecto.
+
 ## v0.1.7 — Triangulación entre dos cámaras
 
 - Medición junto al plano a partir de dos cámaras y un punto común, incluidos extremos de paredes.

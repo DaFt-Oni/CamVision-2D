@@ -1,14 +1,79 @@
-import { useId, useState } from 'react'
+import { useId, useRef, useState } from 'react'
+export function NameInput({ value, onChange, maxLength = 80, ...props }) {
+  const [draft, setDraft] = useState(null),
+    [error, setError] = useState('')
+  const id = useId(),
+    cancel = useRef(false)
+  return (
+    <>
+      <input
+        {...props}
+        value={draft ?? value}
+        maxLength={maxLength}
+        aria-invalid={Boolean(error)}
+        aria-describedby={error ? id : undefined}
+        onFocus={() => {
+          if (draft === null) setDraft(value)
+        }}
+        onChange={(e) => {
+          setDraft(e.target.value)
+          setError('')
+        }}
+        onBlur={() => {
+          if (cancel.current) {
+            cancel.current = false
+            return
+          }
+          const name = (draft ?? value).trim()
+          if (!name) {
+            setError('Escribe un nombre; los espacios solos no son válidos.')
+            return
+          }
+          onChange(name)
+          setDraft(null)
+          setError('')
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            e.currentTarget.blur()
+          }
+          if (e.key === 'Escape') {
+            cancel.current = true
+            setDraft(null)
+            setError('')
+            e.stopPropagation()
+            e.currentTarget.blur()
+          }
+        }}
+      />
+      {error && (
+        <span id={id} className="field-error" role="alert">
+          {error}
+        </span>
+      )}
+    </>
+  )
+}
 export function NumberField({ value, min, max, step = 0.1, onChange, label, unit, slider }) {
-  const id = useId()
-  const [draft, setDraft] = useState(''),
-    [editing, setEditing] = useState(false)
+  const id = useId(),
+    cancel = useRef(false)
+  const [draft, setDraft] = useState(null),
+    [error, setError] = useState('')
   const commit = () => {
-    const parsed = Number(draft.replace(',', '.'))
-    const next =
-      draft.trim() && Number.isFinite(parsed) ? Math.max(min, Math.min(max, parsed)) : value
-    onChange(Math.round(next * 1000) / 1000)
-    setEditing(false)
+    if (cancel.current) {
+      cancel.current = false
+      return
+    }
+    const text = draft ?? String(value),
+      parsed = Number(text.replace(',', '.'))
+    if (!text.trim() || !Number.isFinite(parsed) || parsed < min || parsed > max) {
+      setError(`Introduce un número entre ${min} y ${max} ${unit || ''}.`)
+      return
+    }
+    onChange(Math.round(parsed * 1000) / 1000)
+    setDraft(null)
+    setError('')
   }
   return (
     <div className={`number-field ${slider ? 'has-slider' : ''}`}>
@@ -19,34 +84,55 @@ export function NumberField({ value, min, max, step = 0.1, onChange, label, unit
           type="text"
           inputMode="decimal"
           aria-label={label}
-          value={editing ? draft : value}
+          value={draft ?? value}
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? `${id}-error` : undefined}
           onFocus={() => {
-            setDraft(String(value))
-            setEditing(true)
+            if (draft === null) setDraft(String(value))
           }}
-          onChange={(event) => {
-            const text = event.target.value
-            setDraft(text)
-            const n = Number(text.replace(',', '.'))
-            if (text.trim() && Number.isFinite(n) && n >= min && n <= max) onChange(n)
+          onChange={(e) => {
+            setDraft(e.target.value)
+            setError('')
           }}
           onBlur={commit}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') event.currentTarget.blur()
-            if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
-              event.preventDefault()
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              e.currentTarget.blur()
+            }
+            if (e.key === 'Escape') {
+              cancel.current = true
+              setDraft(null)
+              setError('')
+              e.stopPropagation()
+              e.currentTarget.blur()
+            }
+            if (['ArrowUp', 'ArrowDown'].includes(e.key)) {
+              e.preventDefault()
+              const parsed = Number((draft ?? String(value)).replace(',', '.'))
               const next =
                 Math.round(
-                  Math.max(min, Math.min(max, value + (event.key === 'ArrowUp' ? step : -step))) *
-                    1000,
+                  Math.max(
+                    min,
+                    Math.min(
+                      max,
+                      (Number.isFinite(parsed) ? parsed : value) +
+                        (e.key === 'ArrowUp' ? step : -step),
+                    ),
+                  ) * 1000,
                 ) / 1000
               setDraft(String(next))
-              onChange(next)
+              setError('')
             }
           }}
         />
         <span>{unit}</span>
       </div>
+      {error && (
+        <span id={`${id}-error`} className="field-error" role="alert">
+          {error}
+        </span>
+      )}
       {slider && (
         <input
           className="range"
@@ -56,7 +142,11 @@ export function NumberField({ value, min, max, step = 0.1, onChange, label, unit
           step={step}
           value={value}
           aria-label={`${label}, deslizador`}
-          onChange={(event) => onChange(Number(event.target.value))}
+          onChange={(e) => {
+            setDraft(null)
+            setError('')
+            onChange(Number(e.target.value))
+          }}
         />
       )}
     </div>
@@ -74,51 +164,34 @@ export function SectionHeading({ eyebrow, title, children }) {
   )
 }
 export function Legend({ mode = 'matrix' }) {
-  if (mode === 'sectors')
-    return (
-      <div className="legend">
-        <span>
-          <i className="sector-key" />
-          Campos de visión por cámara
-        </span>
-        <span>Conteos y superposición en la vista Matriz</span>
-        <span>
-          <i className="wall-key" />
-          Pared
-        </span>
-      </div>
-    )
-  if (mode === 'blind')
-    return (
-      <div className="legend">
-        <span>
-          <i className="dot covered" />
-          Zona cubierta
-        </span>
-        <span>
-          <i className="dot blind" />
-          Punto ciego
-        </span>
-        <span>
-          <i className="wall-key" />
-          Pared
-        </span>
-      </div>
-    )
   return (
     <div className="legend">
-      <span>
-        <i className="dot covered" />
-        Cobertura única
-      </span>
-      <span>
-        <i className="dot overlap" />
-        Superposición
-      </span>
-      <span>
-        <i className="dot blind" />
-        Punto ciego
-      </span>
+      {mode === 'sectors' ? (
+        <>
+          <span>
+            <i className="sector-key" />
+            Campos de visión por cámara
+          </span>
+          <span>Conteos y superposición en la vista Matriz</span>
+        </>
+      ) : (
+        <>
+          <span>
+            <i className="dot covered" />
+            {mode === 'blind' ? 'Zona cubierta' : 'Cobertura única'}
+          </span>
+          {mode !== 'blind' && (
+            <span>
+              <i className="dot overlap" />
+              Superposición
+            </span>
+          )}
+          <span>
+            <i className="dot blind" />
+            Punto ciego
+          </span>
+        </>
+      )}
       <span>
         <i className="wall-key" />
         Pared

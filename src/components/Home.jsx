@@ -28,7 +28,7 @@ export default function Home({
       <section className="project-strip" aria-label="Proyecto activo">
         <ProjectBadge project={project} size={22} />
         <div>
-          <span>PROYECTO ACTIVO</span>
+          <span>{libraryCount ? 'ÚLTIMO PROYECTO' : 'EJEMPLO DE VISTA PREVIA'}</span>
           <strong>{project.name}</strong>
         </div>
         <dl>
@@ -136,7 +136,7 @@ export default function Home({
       </div>
       <footer className="home-footer">
         <span>CamVision · Simulación y evaluación de cobertura de videovigilancia</span>
-        <span>Modelo geométrico 2D · Versión 0.1.7</span>
+        <span>Modelo geométrico 2D · Versión 0.1.8 · 16/11/2026</span>
       </footer>
     </div>
   )

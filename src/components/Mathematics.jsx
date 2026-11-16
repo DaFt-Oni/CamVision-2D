@@ -102,8 +102,28 @@ export default function Mathematics({
   const math = c ? cameraMath(c, project.space, project.walls) : null
   return (
     <div className="mathematics explained-math">
+      <nav className="math-index" aria-label="Índice de cálculos">
+        <strong>
+          {c ? cameraName(c) : 'Sin cámara'} · P = {pair(point, 2)} m
+        </strong>
+        {[
+          ['camera-math', 'Dirección de cámara'],
+          ['point-math', 'Visibilidad de P'],
+          ['area-math', 'Matriz y áreas'],
+          ['triangulation-math', 'Triangulación'],
+        ].map(([id, label]) => (
+          <button
+            key={id}
+            onClick={() =>
+              document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
       <TriangulationDetails data={triangulation} onConfigure={onConfigureTriangulation} />
-      <section className="panel">
+      <section className="panel" id="camera-math">
         <SectionHeading
           eyebrow="01 / TRIGONOMETRÍA Y VECTORES"
           title={`Trigonometría y vector de dirección${c ? ` de la ${cameraName(c)}` : ''}`}
@@ -197,7 +217,7 @@ export default function Mathematics({
           </p>
         )}
       </section>
-      <section className="panel">
+      <section className="panel" id="point-math">
         <SectionHeading
           eyebrow="02 / VERIFICACIÓN DE UN PUNTO"
           title={c ? `¿Puede ${cameraName(c)} ver este lugar?` : 'Verificación de un punto'}
@@ -329,7 +349,7 @@ export default function Mathematics({
           CSV
         </button>
       </div>
-      <section className="panel">
+      <section className="panel" id="area-math">
         <SectionHeading
           eyebrow="03 / TODAS LAS CÁMARAS"
           title="De la matriz a superficies y porcentajes"

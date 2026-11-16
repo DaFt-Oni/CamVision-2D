@@ -131,3 +131,126 @@ test('una pestaña del menú recibe cambios sin interrumpir una sesión activa',
   const editing = { ...initial, active: true }
   assert.equal(workspaceReducer(editing, { type: 'sync', value: update }), editing)
 })
+
+test('salir sin guardar elimina un borrador nuevo y conserva otros proyectos', () => {
+  const project = blank()
+  const other = { ...project, id: 'other', name: 'Guardado anterior' }
+  const library = upsertProject([], other, savedAt, true)
+  let state = workspaceReducer(
+    { project, library, active: false },
+    { type: 'begin', project, savedAt },
+  )
+  state = workspaceReducer(state, { type: 'discard' })
+  assert.equal(state.active, false)
+  assert.deepEqual(state.library, library)
+  assert.notEqual(state.project.id, project.id)
+  const empty = workspaceReducer(
+    { project, library: upsertProject([], project, savedAt), active: true },
+    { type: 'discard' },
+  )
+  assert.equal(empty.library.length, 0)
+  assert.equal(empty.project.cameras.length, 0)
+  assert.notEqual(empty.project.id, project.id)
+})
+
+test('descartar restaura geometría e identidad del último guardado explícito', () => {
+  const project = blank()
+  let state = { project, library: upsertProject([], project, savedAt, true), active: true }
+  state = workspaceReducer(state, {
+    type: 'edit',
+    savedAt: '2026-11-11',
+    value: {
+      ...project,
+      name: 'Cambio temporal',
+      icon: 'camera',
+      space: { ...project.space, width: 24 },
+    },
+  })
+  assert.equal(state.library[0].project.space.width, 24)
+  assert.deepEqual(state.library[0].savedProject, project)
+  state = workspaceReducer(state, { type: 'discard' })
+  assert.equal(state.active, false)
+  assert.deepEqual(state.project, project)
+  assert.deepEqual(state.library[0].project, project)
+  assert.equal(state.library[0].savedAt, savedAt)
+})
+
+test('guardar otra vez avanza el punto de restauración sin duplicar el proyecto', () => {
+  const project = blank()
+  let state = { project, library: [], active: true }
+  state = workspaceReducer(state, { type: 'save', savedAt, identity: { name: 'Primer guardado' } })
+  state = workspaceReducer(state, {
+    type: 'edit',
+    savedAt,
+    value: (p) => ({ ...p, name: 'Segundo guardado' }),
+  })
+  state = workspaceReducer(state, { type: 'save', savedAt, identity: {} })
+  state = workspaceReducer(state, {
+    type: 'edit',
+    savedAt,
+    value: (p) => ({ ...p, name: 'Descartar' }),
+  })
+  state = workspaceReducer(state, { type: 'discard' })
+  assert.equal(state.project.name, 'Segundo guardado')
+  assert.equal(state.library.length, 1)
+})
+
+test('un guardado antiguo conserva su versión al iniciar una nueva edición', () => {
+  const project = blank()
+  let state = {
+    project,
+    library: [{ id: project.id, project, draft: false, savedAt }],
+    active: false,
+  }
+  state = workspaceReducer(state, { type: 'begin', project, savedAt })
+  state = workspaceReducer(state, {
+    type: 'edit',
+    savedAt,
+    value: (p) => ({ ...p, name: 'Cambio' }),
+  })
+  assert.deepEqual(workspaceReducer(state, { type: 'discard' }).project, project)
+})
+
+test('recuperar tras recarga mantiene separados el preguardado y la versión confirmada', (t) => {
+  const previous = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
+  const values = new Map()
+  Object.defineProperty(globalThis, 'localStorage', {
+    configurable: true,
+    value: {
+      getItem: (key) => values.get(key) || null,
+      setItem: (key, value) => values.set(key, value),
+    },
+  })
+  t.after(() => {
+    if (previous) Object.defineProperty(globalThis, 'localStorage', previous)
+    else delete globalThis.localStorage
+  })
+  const project = blank()
+  let state = { project, library: upsertProject([], project, savedAt, true), active: true }
+  state = workspaceReducer(state, {
+    type: 'edit',
+    savedAt,
+    value: (p) => ({ ...p, name: 'Recuperación automática' }),
+  })
+  saveWorkspace(state.project, state.library)
+  const recovered = loadWorkspace()
+  assert.deepEqual(recovered.library, state.library)
+  assert.equal(recovered.project.name, 'Recuperación automática')
+  state = workspaceReducer({ ...recovered, active: true }, { type: 'discard' })
+  saveWorkspace(state.project, state.library)
+  assert.deepEqual(loadWorkspace().project, project)
+  assert.deepEqual(loadWorkspace().library[0].project, project)
+  // A damaged checkpoint does not make the healthy recovery entry disappear.
+  const data = JSON.parse(values.get('optivision.workspace.v1'))
+  data.library[0].savedProject = {}
+  values.set('optivision.workspace.v1', JSON.stringify(data))
+  assert.equal(loadWorkspace().library.length, 1)
+  state = workspaceReducer(
+    { project: blank(), library: [], active: true },
+    { type: 'begin', project: blank(), savedAt },
+  )
+  state = workspaceReducer(state, { type: 'discard' })
+  saveWorkspace(state.project, state.library)
+  assert.equal(loadWorkspace().library.length, 0)
+  assert.equal(loadWorkspace().project.cameras.length, 0)
+})

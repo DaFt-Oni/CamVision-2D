@@ -28,3 +28,6 @@ tmp/
 output/
 .env
 .env.*
+video/material/
+video/proyecto.json
+__pycache__/

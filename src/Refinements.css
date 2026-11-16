@@ -1,0 +1,394 @@
+body {
+  min-width: 0;
+}
+.workbench .drawing-corner-label > span,
+.workbench .inspector-section-title > span,
+.workbench .frame-size-controls > p,
+.workbench .input-unit > span,
+.workbench .matrix-location-note p {
+  color: #40546e;
+  font-size: 12px;
+}
+.skip-link {
+  position: fixed;
+  top: -80px;
+  left: 12px;
+  z-index: 200;
+  padding: 10px 16px;
+  background: white;
+  border: 2px solid #2455ca;
+}
+.skip-link:focus {
+  top: 8px;
+}
+.field-error {
+  display: block;
+  color: #8e3022;
+  font-size: 12px;
+  line-height: 1.5;
+  padding-top: 5px;
+}
+[aria-invalid='true'] {
+  border-color: #a43a2c !important;
+}
+.workspace-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 10px 0;
+  padding: 10px 14px;
+  background: #fff;
+  border: 1px solid #c2cede;
+  border-radius: 5px;
+  color: #29415f;
+  font-size: 12px;
+}
+.workspace-notice.conflict {
+  border-color: #b56f35;
+}
+.workspace-notice p {
+  flex: 1 1 300px;
+}
+.workbench .page-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.workbench .workbench-heading {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.compact-metrics {
+  display: none;
+  color: #29415f;
+  font-size: 12px;
+  margin: 8px 0 12px;
+}
+.compact-workspace.workbench .compact-metrics {
+  display: block;
+}
+.compact-workspace.workbench .expanded-metrics {
+  display: none;
+}
+.compact-workspace.workbench main {
+  padding-top: 12px;
+}
+.compact-workspace.workbench .topbar {
+  min-height: 52px;
+  padding-block: 7px;
+}
+.compact-workspace.workbench .home-brand small {
+  display: none;
+}
+.compact-workspace.workbench .workbench-heading {
+  margin-bottom: 8px;
+}
+.compact-workspace.workbench .workbench-heading h1 {
+  font-size: 20px;
+}
+.compact-workspace.workbench .workbench-heading > div > span {
+  display: none;
+}
+.compact-workspace.workbench .integrated-editor .plan-heading {
+  min-height: 54px;
+  padding: 8px 13px;
+}
+.compact-workspace.workbench .drawing-eyebrow {
+  display: none;
+}
+.compact-workspace.workbench .integrated-editor .plan-toolbar {
+  min-height: 42px;
+  padding: 5px 10px;
+}
+.overlap-help {
+  font-size: 12px;
+  color: #40546e;
+  margin: 8px 0 12px;
+}
+.compact-workspace.workbench .overlap-help {
+  display: none;
+}
+.workbench .integrated-editor .inspector-tabs > button {
+  font-size: 12px;
+  min-height: 42px;
+}
+.workbench .integrated-editor .field-help,
+.workbench .inspector-hint,
+.workbench .slider-labels,
+.workbench .inspector-footer,
+.workbench .plan-status,
+.workbench .legend {
+  color: #40546e;
+  font-size: 12px;
+}
+.workbench .drawing-eyebrow,
+.workbench .plan-heading-meta > span,
+.workbench .canvas-label,
+.workbench .view-switcher > button,
+.workbench .inspector-heading > span {
+  color: #40546e;
+}
+.workbench .canvas-label {
+  font-size: 11px;
+}
+.workbench .integrated-editor .inspector-heading > span {
+  font-size: 10px;
+}
+.workbench .metric-note {
+  color: #40546e;
+  font-size: 12px;
+}
+.mobile-panel-toggle,
+.mobile-parameters-close {
+  display: none;
+}
+.math-index {
+  position: sticky;
+  top: 8px;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 15px;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid #c2cede;
+  border-radius: 5px;
+  font-size: 12px;
+  box-shadow: 0 2px 6px #172b4610;
+}
+.math-index strong {
+  flex: 1 1 100%;
+}
+.math-index a,
+.math-index button {
+  color: #214d9c;
+  text-decoration: underline;
+  background: none;
+  border: 0;
+  padding: 3px;
+  font-size: 12px;
+}
+.mathematics section {
+  scroll-margin-top: 115px;
+}
+.project-search {
+  display: grid;
+  gap: 5px;
+  margin-bottom: 14px;
+  font-size: 12px;
+}
+.project-search input {
+  padding: 9px;
+  border: 1px solid #aebed2;
+  border-radius: 4px;
+  width: 100%;
+}
+.project-preview {
+  width: 62px;
+  height: 48px;
+  flex-shrink: 0;
+  background: #f2f5f9;
+  border: 1px solid #c8d4e3;
+}
+.project-copy {
+  min-height: 34px;
+  padding: 5px 8px;
+  background: white;
+  border: 1px solid #b3c4d9;
+  border-radius: 4px;
+  font-size: 11px;
+}
+.local-project-row {
+  flex-wrap: wrap;
+}
+.local-project-open {
+  min-width: 0;
+  flex: 1 1 200px;
+}
+.local-project-open strong {
+  overflow-wrap: anywhere;
+}
+.workbench .drawing-eyebrow,
+.workbench .plan-heading-meta > span,
+.workbench .plan-heading p,
+.workbench .canvas-label,
+.workbench .view-switcher > button {
+  color: #3e536e;
+}
+.workbench .inspector .slider-labels,
+.workbench .inspector .field-help {
+  color: #40546e;
+}
+@media (max-width: 950px) {
+  .workbench .floor-plan {
+    scroll-margin-top: 8px;
+  }
+  .workbench .integrated-editor .inspector-slot {
+    display: none;
+  }
+  .parameters-open.workbench .integrated-editor .inspector-slot {
+    display: block;
+    position: fixed;
+    z-index: 80;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    height: min(52dvh, 440px);
+    max-height: calc(100dvh - 80px);
+    box-shadow: 0 -8px 40px #172b4629;
+    border: 1px solid #9fb4d0;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .parameters-open.workbench .integrated-editor .inspector-slot .parameters {
+    border: 0;
+  }
+  .mobile-panel-toggle {
+    display: block;
+    position: fixed;
+    right: auto;
+    left: 10px;
+    bottom: 12px;
+    z-index: 40;
+    min-height: 44px;
+    background: #2455ca;
+    color: white;
+    border: 1px solid #173e91;
+    border-radius: 5px;
+    padding: 9px 12px;
+    font-size: 12px;
+    max-width: 160px;
+    box-shadow: 0 2px 8px #172b4633;
+  }
+  .parameters-open .mobile-panel-toggle {
+    display: none;
+  }
+  .mobile-parameters-close {
+    display: inline-flex;
+    margin-left: 8px;
+    order: 3;
+    min-width: 36px;
+    min-height: 36px;
+  }
+  .workbench .drawing-scale {
+    bottom: 70px;
+  }
+  .workbench .integrated-editor .view-navigation button,
+  .workbench .zoom-control button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .workbench .integrated-editor .inspector-tabs > button {
+    font-size: 12px;
+  }
+}
+@media (max-width: 600px) {
+  .workbench main {
+    padding: 10px 10px 68px;
+  }
+  .workbench .page-actions {
+    justify-content: flex-start;
+    width: 100%;
+  }
+  .workbench .page-actions .btn {
+    padding: 6px 8px;
+    min-height: 36px;
+    font-size: 12px;
+  }
+  .workbench .workbench-heading h1 {
+    font-size: 20px;
+  }
+  .workbench .workspace-project {
+    width: 100%;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+  .workbench .workspace-project label {
+    flex: 1;
+  }
+  .workbench .workspace-project .field-error {
+    position: absolute;
+    top: 100%;
+    background: #fff;
+    z-index: 10;
+    padding: 8px;
+  }
+  .workbench .topbar {
+    gap: 8px;
+    padding: 8px 10px;
+  }
+  .workbench .integrated-editor .plan-heading-meta {
+    display: none;
+  }
+  .workbench .integrated-editor .plan-heading {
+    min-height: 54px;
+  }
+  .workbench .plan-toolbar .drawing-tools,
+  .workbench .plan-toolbar .drawing-view-tools {
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+  .workbench .view-switcher {
+    min-width: 0;
+    flex: 1;
+  }
+  .workbench .view-switcher > button {
+    min-width: 0;
+    padding: 6px;
+    font-size: 11px;
+  }
+  .workbench .view-navigation {
+    flex-wrap: wrap;
+  }
+  .workbench .legend {
+    flex-wrap: wrap;
+    gap: 7px 12px;
+  }
+  .workbench .results-tabs {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .workbench .results-tabs > button {
+    flex: 1;
+    padding-inline: 8px;
+  }
+  .workbench .section-heading {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .home-content {
+    padding-inline: 12px;
+  }
+  .home-heading,
+  .home-footer,
+  .project-strip {
+    flex-wrap: wrap;
+  }
+  .project-strip dl {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .home-section-title {
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+  .math-index {
+    position: static;
+  }
+  dialog {
+    max-width: calc(100vw - 16px);
+    width: min(680px, calc(100vw - 16px));
+  }
+  .project-form-actions .btn {
+    flex-basis: 120px;
+  }
+}
+@media print {
+  .mobile-panel-toggle,
+  .mobile-parameters-close,
+  .skip-link,
+  .math-index {
+    display: none;
+  }
+}

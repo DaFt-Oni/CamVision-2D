@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react'
 import Icon from './components/Icon.jsx'
 import Plan from './components/Plan.jsx'
 import Parameters from './components/Parameters.jsx'
 import Analysis, { Metrics } from './components/Analysis.jsx'
 import Mathematics from './components/Mathematics.jsx'
 import { navigateTabs } from './lib/accessibility.js'
-import { calculateCoverage } from './lib/coverage.js'
+import useCoverage from './hooks/useCoverage.js'
+import { NameInput, NumberField } from './components/Controls.jsx'
 import { evaluateTriangulation, initialTriangulation } from './lib/triangulation.js'
 import {
   COLORS,
@@ -22,10 +23,11 @@ import { Toast, ConfirmAction } from './components/Feedback.jsx'
 import {
   ProjectLauncher,
   SaveProjectForm,
+  ExitProjectPrompt,
   LocalProjects,
   ProjectBadge,
 } from './components/ProjectManager.jsx'
-import { exportMatrix, exportProject, exportReport } from './lib/export.js'
+import { exportMatrix, exportProject, exportReport, exportPlanImage } from './lib/export.js'
 import Home from './components/Home.jsx'
 import SimulatorOverview from './components/SimulatorOverview.jsx'
 import useDrawingFrame from './hooks/useDrawingFrame.js'
@@ -36,36 +38,68 @@ import './ProjectManager.css'
 import './Editor.css'
 import './Feedback.css'
 import './Triangulation.css'
+import './Refinements.css'
 
 function App() {
   const workspace = useProjectWorkspace()
   const { toast, showToast, dismissToast } = useToast()
   const { project, setProject, library, setLibrary, storageError } = workspace
-  const [triangulationSettings, setTriangulationSettings] = useState(() =>
-    initialTriangulation(project),
+  const hasSavedProject = library.some((entry) => entry.id === project.id && !entry.draft)
+  const triangulationSettings = useMemo(
+    () => ({ ...initialTriangulation(project), ...project.measurement }),
+    [project],
   )
+  const [mathCameraId, setMathCameraId] = useState(project.cameras[0]?.id || '')
   const [frameSettings, setFrameSettings] = useState(loadFrameSettings)
   const [pendingAction, setPendingAction] = useState(null)
   const [confirmation, setConfirmation] = useState(null)
   const [activeTab, setActiveTab] = useState('overview')
   const [planLayer, setPlanLayer] = useState('sectors')
   const [inspectorTab, setInspectorTab] = useState('cameras')
-  const [page, setPage] = useState('home'),
+  const [page, setPage] = useState(() =>
+      location.hash === '#simulator' && library.some((e) => e.id === project.id)
+        ? 'simulator'
+        : 'home',
+    ),
     [selected, setSelected] = useState(() => project.cameras[0]?.id || null)
   const [wallStart, setWallStart] = useState(null)
-  const [probe, setProbe] = useState(null),
-    [tool, setTool] = useState('select')
+  const probe = project.measurement?.probe || null
+  const setProbe = (point) =>
+    setProject(
+      (p) => ({
+        ...p,
+        measurement: {
+          ...initialTriangulation(p),
+          ...p.measurement,
+          probe: typeof point === 'function' ? point(p.measurement?.probe || null) : point,
+        },
+      }),
+      { group: 'probe' },
+    )
+  const [tool, setTool] = useState('select')
+  const [compact, setCompact] = useState(() => {
+    try {
+      return localStorage.getItem('camvision.compact') !== 'false'
+    } catch {
+      return true
+    }
+  })
+  const [mobilePanel, setMobilePanel] = useState(false)
+  const [wallCoordinates, setWallCoordinates] = useState({ ax: 1, ay: 1, bx: 4, by: 1 })
   const [modal, setModal] = useState(null),
     [menu, setMenu] = useState(null)
   const fileRef = useRef(null),
     dialogRef = useRef(null)
-  const result = useMemo(() => calculateCoverage(project), [project])
+  const { result, calculating } = useCoverage(project)
   const triangulation = useMemo(
     () => evaluateTriangulation(project, triangulationSettings, probe),
     [project, triangulationSettings, probe],
   )
   const updateTriangulation = (changes) =>
-    setTriangulationSettings((previous) => ({ ...previous, ...changes }))
+    setProject(
+      (p) => ({ ...p, measurement: { ...initialTriangulation(p), ...p.measurement, ...changes } }),
+      { group: 'measurement' },
+    )
   const changeInspectorTab = (tab) => {
     setInspectorTab(tab)
     if (tab === 'triangulation') {
@@ -87,6 +121,8 @@ function App() {
     )
   }
   const camera = project.cameras.find((c) => c.id === selected)
+  const mathCamera =
+    project.cameras.find((c) => c.id === mathCameraId) || camera || project.cameras[0]
   const { ref: drawingLayoutRef, frame } = useDrawingFrame(
     project.space,
     frameSettings,
@@ -134,12 +170,16 @@ function App() {
     setActiveTab('overview')
     setSelected(next.cameras[0]?.id || null)
     setInspectorTab(next.cameras.length ? 'cameras' : 'space')
-    setProbe(null)
-    setTriangulationSettings(initialTriangulation(next))
+    setMathCameraId(next.cameras[0]?.id || '')
+    setMobilePanel(false)
     changeTool('select')
     setMenu(null)
     setModal(null)
     setPendingAction(null)
+    if (location.hash !== '#simulator') history.pushState(null, '', '#simulator')
+    requestAnimationFrame(() =>
+      document.getElementById('editor-title')?.focus({ preventScroll: true }),
+    )
   }
   const cancelConfirmation = () => {
     setModal(confirmation?.returnTo || null)
@@ -153,52 +193,136 @@ function App() {
     setModal(null)
     setPendingAction(null)
   }
+  const goHome = () => {
+    setPage('home')
+    closeModal()
+    setMobilePanel(false)
+    if (location.hash !== '#home') history.pushState(null, '', '#home')
+  }
+  const requestExit = (action) => {
+    setPendingAction(action)
+    if (hasSavedProject && !workspace.dirty && !workspace.conflict) {
+      workspace
+        .save({}, true)
+        .then((saved) => {
+          if (action.type === 'open')
+            beginProject(
+              action.project.id === project.id && !action.options?.fresh ? saved : action.project,
+              action.options,
+            )
+          else goHome()
+        })
+        .catch((error) => showToast(error.message, { type: 'error' }))
+    } else setModal(hasSavedProject ? 'confirm-exit' : 'save-exit')
+  }
   const openProject = (next, options = {}) => {
     if (page === 'simulator') {
-      setPendingAction({ type: 'open', project: next, options })
-      setModal('save-exit')
+      requestExit({ type: 'open', project: next, options })
     } else beginProject(next, options)
   }
   const navigate = (next) => {
     setMenu(null)
     if (next === 'home') {
       if (page === 'simulator') {
-        setPendingAction({ type: 'home' })
-        setModal('save-exit')
+        requestExit({ type: 'home' })
       }
       return
     }
     if (page === 'home') setModal('launcher')
     else setActiveTab(['analysis', 'math'].includes(next) ? next : 'overview')
   }
-  const confirmIdentity = (identity) => {
+  const completeExit = (resolvedProject) => {
+    if (pendingAction?.type === 'open') {
+      const next =
+        pendingAction.project.id === project.id && !pendingAction.options?.fresh
+          ? resolvedProject
+          : pendingAction.project
+      beginProject(next, pendingAction.options)
+    } else {
+      goHome()
+    }
+  }
+  const confirmIdentity = async (identity) => {
+    if (
+      document.querySelector('main [aria-invalid="true"], .workspace-project [aria-invalid="true"]')
+    )
+      return 'Hay campos sin confirmar. Vuelve a Seguir editando y corrige los datos marcados antes de guardar.'
     try {
-      workspace.save(identity, modal === 'save-exit')
-      if (modal === 'save-exit' && pendingAction?.type === 'open') {
-        const next =
-          pendingAction.project.id === project.id
-            ? { ...pendingAction.project, ...identity }
-            : pendingAction.project
-        beginProject(next, pendingAction.options)
-      } else {
-        if (modal === 'save-exit') setPage('home')
-        closeModal()
-      }
+      const leaving = modal === 'save-exit' || modal === 'confirm-exit'
+      const saved = await workspace.save(identity, leaving)
+      if (leaving) completeExit(saved)
+      else closeModal()
       showToast('Proyecto guardado en este navegador.', { title: 'Proyecto guardado' })
+    } catch (error) {
+      return workspace.conflict || error.name === 'WorkspaceConflict'
+        ? error.message
+        : 'No se pudo guardar en este navegador. Sigue editando y exporta el proyecto JSON para conservarlo.'
+    }
+  }
+  const onHistory = useEffectEvent(() => {
+    if (location.hash === '#simulator' && page === 'home') {
+      const entry = library.find((e) => e.id === project.id)
+      if (entry) beginProject(entry.project)
+      else navigate('simulator')
+    } else if ((location.hash === '#home' || !location.hash) && page === 'simulator')
+      navigate('home')
+  })
+  const onKeyboard = useEffectEvent((event) => {
+    if (page !== 'simulator' || modal) return
+    const input = event.target.closest('input,textarea,select,[contenteditable="true"]')
+    if (
+      !input &&
+      (event.ctrlKey || event.metaKey) &&
+      ['z', 'y'].includes(event.key.toLowerCase())
+    ) {
+      event.preventDefault()
+      if (event.key.toLowerCase() === 'y' || event.shiftKey) workspace.redo()
+      else workspace.undo()
+    }
+    if (!input && event.key === 'Escape') {
+      setWallStart(null)
+      setTool('select')
+      setMobilePanel(false)
+    }
+  })
+  useEffect(() => {
+    window.addEventListener('popstate', onHistory)
+    document.addEventListener('keydown', onKeyboard)
+    return () => {
+      window.removeEventListener('popstate', onHistory)
+      document.removeEventListener('keydown', onKeyboard)
+    }
+  }, [])
+  const discardAndExit = async () => {
+    try {
+      const restored = await workspace.discard()
+      completeExit(restored)
+      showToast(
+        hasSavedProject
+          ? 'Se conserva la última versión guardada del proyecto.'
+          : 'Se descartó el proyecto sin guardar.',
+        { title: 'Salida sin guardar' },
+      )
     } catch {
-      return 'No se pudo guardar en este navegador. Sigue editando y exporta el proyecto JSON para conservarlo.'
+      return 'No se pudo descartar el preguardado en este navegador. Inténtalo de nuevo; el proyecto sigue abierto.'
     }
   }
   const selectObject = (id) => {
     setSelected(id)
-    if (project.cameras.some((camera) => camera.id === id)) setInspectorTab('cameras')
+    if (project.cameras.some((camera) => camera.id === id)) {
+      setInspectorTab('cameras')
+      setMathCameraId(id)
+    }
     if (project.walls.some((wall) => wall.id === id)) setInspectorTab('walls')
   }
-  const updateCamera = (id, changes) =>
-    setProject((p) => ({
-      ...p,
-      cameras: p.cameras.map((c) => (c.id === id ? { ...c, ...changes } : c)),
-    }))
+  const updateCamera = (id, changes, options = {}) =>
+    setProject(
+      (p) => ({
+        ...p,
+        cameras: p.cameras.map((c) => (c.id === id ? { ...c, ...changes } : c)),
+      }),
+      { group: options.group || `camera:${id}` },
+    )
   const addCamera = (position = { x: project.space.width / 2, y: project.space.height / 2 }) => {
     if (project.cameras.length >= MAX_CAMERAS)
       return showToast('Se admite un máximo de 16 cámaras.', {
@@ -277,10 +401,12 @@ function App() {
     setConfirmation({ id, kind: 'project', name: entry.project.name, returnTo: 'library' })
     setModal('confirm-delete')
   }
-  const confirmDeletion = () => {
+  const confirmDeletion = async () => {
     if (!confirmation) return
     if (confirmation.kind === 'project') {
-      if (!setLibrary((previous) => previous.filter((entry) => entry.id !== confirmation.id))) {
+      if (
+        !(await setLibrary((previous) => previous.filter((entry) => entry.id !== confirmation.id)))
+      ) {
         showToast('No se pudo eliminar el proyecto del almacenamiento local.', { type: 'error' })
         return
       }
@@ -298,9 +424,12 @@ function App() {
     )
     cancelConfirmation()
   }
-  const saveLocal = () => {
+  const saveLocal = async () => {
     setPendingAction(null)
-    setModal('save-project')
+    if (hasSavedProject) {
+      const error = await confirmIdentity({})
+      if (error) showToast(error, { type: 'error', title: 'No se pudo guardar' })
+    } else setModal('save-project')
   }
   const importFile = async (event) => {
     const file = event.target.files?.[0]
@@ -324,13 +453,18 @@ function App() {
       )
     }
   }
-  const exportAction = (type) => {
+  const exportAction = async (type) => {
     setMenu(null)
     try {
       if (type === 'json') exportProject(project)
       if (type === 'txt')
         exportReport(project, result, triangulationSettings.enabled ? triangulation : null)
       if (type === 'csv') exportMatrix(project, result)
+      if (type === 'png' || type === 'svg') {
+        if (calculating)
+          throw new Error('Espera a que termine el cálculo antes de exportar el plano.')
+        await exportPlanImage(document.querySelector('.floor-plan'), project, result, type)
+      }
       showToast('Archivo exportado. Revisa tus descargas.', { title: 'Exportación completada' })
     } catch {
       showToast('No se pudo generar el archivo. Vuelve a intentarlo.', {
@@ -341,7 +475,22 @@ function App() {
   }
 
   return (
-    <div className={`app-shell ${page === 'home' ? 'is-home' : 'workbench'}`} data-section={page}>
+    <div
+      className={`app-shell ${page === 'home' ? 'is-home' : 'workbench'} ${compact ? 'compact-workspace' : ''} ${mobilePanel ? 'parameters-open' : ''}`}
+      data-section={page}
+    >
+      <a
+        className="skip-link"
+        href="#main-content"
+        onClick={(e) => {
+          e.preventDefault()
+          const target = document.getElementById(page === 'home' ? 'main-content' : 'editor-title')
+          target?.focus({ preventScroll: true })
+          target?.scrollIntoView({ block: 'start' })
+        }}
+      >
+        Saltar al contenido
+      </a>
       <div className="main-shell">
         <header className="topbar">
           <a
@@ -375,13 +524,14 @@ function App() {
               <label>
                 <span className="sr-only">Nombre del proyecto</span>
                 <ProjectBadge project={project} size={14} />
-                <input
+                <NameInput
+                  aria-label="Nombre del proyecto"
                   value={project.name}
                   maxLength={80}
-                  onChange={(event) =>
+                  onChange={(name) =>
                     setProject((previous) => ({
                       ...previous,
-                      name: event.target.value || 'Proyecto',
+                      name,
                     }))
                   }
                 />
@@ -391,7 +541,19 @@ function App() {
           <div className="topbar-actions">
             <span className={`save-status ${storageError ? 'error' : ''}`}>
               <i />
-              {storageError ? 'Guardado no disponible' : 'Guardado automático'}
+              {workspace.conflict
+                ? 'Conflicto entre pestañas'
+                : storageError
+                  ? 'Guardado no disponible'
+                  : !workspace.active
+                    ? library.length
+                      ? 'En este navegador'
+                      : 'Ejemplo de vista previa'
+                    : workspace.saving
+                      ? 'Preguardando…'
+                      : workspace.dirty
+                        ? 'Cambios pendientes · recuperación activa'
+                        : 'Guardado confirmado'}
             </span>
             <span className="local-badge">
               <i />
@@ -407,7 +569,7 @@ function App() {
             </button>
           </div>
         </header>
-        <main id="main-content">
+        <main id="main-content" tabIndex={-1}>
           {page === 'home' ? (
             <Home
               project={project}
@@ -423,12 +585,77 @@ function App() {
             />
           ) : (
             <>
+              {workspace.recovered && (
+                <p className="workspace-notice" role="status">
+                  Se recuperaron datos del navegador. Revisa el proyecto y exporta una copia JSON.
+                </p>
+              )}
+              {workspace.conflict && (
+                <div className="workspace-notice conflict" role="alert">
+                  <p>
+                    Este proyecto cambió en otra pestaña. Tus cambios siguen abiertos y el
+                    preguardado está detenido para no sobrescribirlos.
+                  </p>
+                  <button
+                    className="btn"
+                    onClick={() =>
+                      workspace
+                        .resolveConflict(false)
+                        .catch((e) => showToast(e.message, { type: 'error' }))
+                    }
+                  >
+                    Abrir versión de la otra pestaña
+                  </button>
+                  <button
+                    className="btn primary"
+                    onClick={() =>
+                      workspace
+                        .resolveConflict(true)
+                        .catch((e) => showToast(e.message, { type: 'error' }))
+                    }
+                  >
+                    Conservar mis cambios en una copia
+                  </button>
+                </div>
+              )}
               <div className="workbench-heading">
                 <div>
-                  <h1>Simulador de cobertura</h1>
+                  <h1 id="editor-title" tabIndex={-1}>
+                    Simulador de cobertura
+                  </h1>
                   <span>Plano, configuración y resultados en un mismo espacio</span>
                 </div>
                 <div className="page-actions">
+                  <button
+                    className="btn"
+                    aria-pressed={compact}
+                    onClick={() => {
+                      setCompact(!compact)
+                      try {
+                        localStorage.setItem('camvision.compact', String(!compact))
+                      } catch {
+                        /* Optional preference. */
+                      }
+                    }}
+                  >
+                    {compact ? 'Mostrar indicadores' : 'Vista compacta'}
+                  </button>
+                  <button
+                    className="btn"
+                    disabled={!workspace.past?.length}
+                    onClick={workspace.undo}
+                    title="Deshacer · Ctrl+Z"
+                  >
+                    Deshacer
+                  </button>
+                  <button
+                    className="btn"
+                    disabled={!workspace.future?.length}
+                    onClick={workspace.redo}
+                    title="Rehacer · Ctrl+Mayús+Z"
+                  >
+                    Rehacer
+                  </button>
                   <button className="btn" onClick={() => setModal('library')}>
                     <Icon name="folder" size={15} />
                     <span>Proyectos locales</span>
@@ -437,6 +664,11 @@ function App() {
                     <Icon name="save" size={15} />
                     Guardar
                   </button>
+                  {hasSavedProject && (
+                    <button className="btn" onClick={() => setModal('project-properties')}>
+                      Propiedades
+                    </button>
+                  )}
                   <div className="dropdown-root">
                     <button
                       className="btn primary"
@@ -449,6 +681,20 @@ function App() {
                     </button>
                     {menu === 'export' && (
                       <div className="dropdown export-menu">
+                        <button onClick={() => exportAction('png')}>
+                          <Icon name="download" size={16} />
+                          <span>
+                            Imagen del plano<small>Vista actual con escala y resultados</small>
+                          </span>
+                          <b>PNG</b>
+                        </button>
+                        <button onClick={() => exportAction('svg')}>
+                          <Icon name="download" size={16} />
+                          <span>
+                            Plano vectorial<small>Imagen ampliable para informes</small>
+                          </span>
+                          <b>SVG</b>
+                        </button>
                         <button onClick={() => exportAction('txt')}>
                           <Icon name="book" size={16} />
                           <span>
@@ -485,7 +731,26 @@ function App() {
                   </div>
                 </div>
               </div>
-              <Metrics result={result} />
+              <p className="compact-metrics" role="status">
+                {calculating
+                  ? 'Actualizando estimación…'
+                  : `Cobertura ${result.coverage.toFixed(1)} % · Zona ciega ${result.blind.toFixed(1)} % · ${project.cameras.length} cámaras`}
+              </p>
+              <div className="expanded-metrics">
+                <Metrics result={result} />
+              </div>
+              <p className="overlap-help">
+                La superposición está incluida en la cobertura; los porcentajes de esas dos tarjetas
+                no se suman.
+              </p>
+              {!project.cameras.length && (
+                <div className="workspace-notice">
+                  <span>Comienza definiendo el recinto y añadiendo tu primera cámara.</span>
+                  <button className="btn primary" onClick={() => addCamera()}>
+                    Añadir primera cámara
+                  </button>
+                </div>
+              )}
               <div
                 className="drawing-layout"
                 ref={drawingLayoutRef}
@@ -520,6 +785,14 @@ function App() {
                       triangulationSettings.mode === 'point' &&
                       triangulationSettings.target === 'probe'
                     }
+                    calculating={calculating}
+                    onParameters={() => {
+                      setMobilePanel(!mobilePanel)
+                      if (!mobilePanel)
+                        document
+                          .querySelector('.floor-plan')
+                          ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                    }}
                     inspector={
                       <Parameters
                         project={project}
@@ -546,13 +819,27 @@ function App() {
                         onWall={updateWall}
                         onDelete={deleteSelected}
                         onAddCamera={() => addCamera()}
+                        onAddWallByCoordinates={() => {
+                          setWallCoordinates({
+                            ax: 1,
+                            ay: 1,
+                            bx: Math.min(4, project.space.width),
+                            by: 1,
+                          })
+                          setModal('wall-coordinates')
+                        }}
+                        onClose={() => setMobilePanel(false)}
                         onTool={changeTool}
                       />
                     }
                   />
                 </div>
               </div>
-              <section className="results-dock" aria-label="Resultados del simulador">
+              <section
+                className="results-dock"
+                aria-label="Resultados del simulador"
+                aria-busy={calculating}
+              >
                 <div className="results-dock-bar">
                   <div
                     className="results-tabs"
@@ -625,7 +912,7 @@ function App() {
                   {activeTab === 'overview' && (
                     <SimulatorOverview
                       result={result}
-                      camera={camera}
+                      camera={mathCamera}
                       project={project}
                       onCamera={selectObject}
                       onTab={setActiveTab}
@@ -636,7 +923,7 @@ function App() {
                     <Mathematics
                       project={project}
                       result={result}
-                      camera={camera}
+                      camera={mathCamera}
                       onCamera={selectObject}
                       probe={probe}
                       onProbe={setProbe}
@@ -690,22 +977,75 @@ function App() {
               <h2 id="dialog-title">
                 {modal === 'library'
                   ? 'Proyectos locales'
-                  : modal === 'launcher'
-                    ? 'Abrir simulador'
-                    : modal === 'save-exit'
-                      ? 'Guardar antes de salir'
-                      : modal === 'confirm-delete'
-                        ? `Eliminar ${confirmation?.kind === 'project' ? 'proyecto' : confirmation?.kind === 'camera' ? 'cámara' : 'pared'}`
-                        : modal === 'save-project'
-                          ? 'Guardar proyecto'
-                          : 'Guía del simulador'}
+                  : modal === 'wall-coordinates'
+                    ? 'Crear pared por coordenadas'
+                    : modal === 'launcher'
+                      ? 'Abrir simulador'
+                      : modal === 'save-exit'
+                        ? '¿Guardar este proyecto?'
+                        : modal === 'confirm-exit'
+                          ? 'Salir del proyecto'
+                          : modal === 'project-properties'
+                            ? 'Propiedades del proyecto'
+                            : modal === 'confirm-delete'
+                              ? `Eliminar ${confirmation?.kind === 'project' ? 'proyecto' : confirmation?.kind === 'camera' ? 'cámara' : 'pared'}`
+                              : modal === 'save-project'
+                                ? 'Guardar proyecto'
+                                : 'Guía del simulador'}
               </h2>
             </div>
             <button className="icon-button" aria-label="Cerrar diálogo" onClick={closeModal}>
               <Icon name="close" />
             </button>
           </div>
-          {modal === 'confirm-delete' && confirmation ? (
+          {modal === 'wall-coordinates' ? (
+            <form
+              onSubmit={(event) => {
+                event.preventDefault()
+                const invalid = event.currentTarget.querySelector('[aria-invalid="true"]')
+                if (invalid) {
+                  invalid.focus()
+                  return
+                }
+                const { ax, ay, bx, by } = wallCoordinates
+                if (Math.hypot(ax - bx, ay - by) < 0.1)
+                  return showToast('La pared debe medir al menos 0,10 m.', { type: 'warning' })
+                addWall({ x: ax, y: ay }, { x: bx, y: by })
+                closeModal()
+                setMobilePanel(true)
+              }}
+            >
+              <p className="dialog-description">
+                Introduce los extremos A y B en metros. Confirma cada campo con Enter o Tab.
+              </p>
+              <div className="field-grid">
+                {[
+                  ['ax', 'A · X', project.space.width],
+                  ['ay', 'A · Y', project.space.height],
+                  ['bx', 'B · X', project.space.width],
+                  ['by', 'B · Y', project.space.height],
+                ].map(([key, label, max]) => (
+                  <NumberField
+                    key={key}
+                    label={label}
+                    value={wallCoordinates[key]}
+                    min={0}
+                    max={max}
+                    unit="m"
+                    onChange={(value) => setWallCoordinates((p) => ({ ...p, [key]: value }))}
+                  />
+                ))}
+              </div>
+              <div className="project-form-actions">
+                <button type="button" className="btn" onClick={closeModal}>
+                  Cancelar
+                </button>
+                <button className="btn primary" type="submit">
+                  Crear pared
+                </button>
+              </div>
+            </form>
+          ) : modal === 'confirm-delete' && confirmation ? (
             <ConfirmAction
               confirmation={confirmation}
               onCancel={cancelConfirmation}
@@ -718,12 +1058,21 @@ function App() {
               onOpen={openProject}
               onImport={() => fileRef.current.click()}
             />
-          ) : modal === 'save-project' || modal === 'save-exit' ? (
+          ) : modal === 'confirm-exit' ? (
+            <ExitProjectPrompt
+              project={project}
+              onSave={() => confirmIdentity({})}
+              onDiscard={discardAndExit}
+              onCancel={closeModal}
+            />
+          ) : ['save-project', 'save-exit', 'project-properties'].includes(modal) ? (
             <SaveProjectForm
               key={`${modal}-${project.id}`}
               project={project}
               leaving={modal === 'save-exit'}
+              editingProperties={modal === 'project-properties'}
               onSave={confirmIdentity}
+              onDiscard={discardAndExit}
               onCancel={closeModal}
             />
           ) : modal === 'library' ? (

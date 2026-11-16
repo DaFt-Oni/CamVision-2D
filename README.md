@@ -31,7 +31,7 @@ npm run preview  # Sirve la versión compilada, normalmente en el puerto 4173
 
 La copia de referencia **v0.1.0** está en `../versiones/OptiVision-v0.1.0.zip`, junto a `RESTAURAR-v0.1.0.md`. Se creó y verificó antes de modificar el control de tamaño. Contiene fuentes, lockfile, pruebas, documentación y la compilación existente; omite node_modules. El manifiesto del ZIP permite comprobar los archivos por SHA-256.
 
-Esta revisión de trabajo es **v0.1.7**. Para comparar ambas sin reemplazar archivos, extrae la copia en otra carpeta, ejecuta npm ci y sirve la referencia con `npm run dev -- --port 5174`. El proyecto actual conserva su carpeta y su puerto habituales.
+Esta revisión de trabajo es **v0.1.8**. Para comparar ambas sin reemplazar archivos, extrae la copia en otra carpeta, ejecuta npm ci y sirve la referencia con `npm run dev -- --port 5174`. El proyecto actual conserva su carpeta y su puerto habituales.
 
 ### Tamaño del cuadro
 
@@ -39,7 +39,7 @@ En **Parámetros → Espacio → Escala visual del cuadro** puedes escoger manua
 
 La escala se guarda en este navegador y solo cambia la presentación. Los metros del recinto, las cámaras, la matriz y los porcentajes conservan sus valores. **Restablecer escala · 100 %** devuelve el marco vertical a su tamaño base; la copia v0.1.0 conserva el diseño anterior completo.
 
-La barra de navegación está separada de las herramientas de edición y de las vistas Cobertura/Matriz/Puntos ciegos. **Seleccionar** permite elegir objetos o arrastrar el fondo para desplazar la vista; la rueda acerca o aleja alrededor del puntero y también puedes usar + y −. Los botones de giro cambian la orientación en pasos de 90°, y los de volteo reflejan horizontal o verticalmente. **Ajustar plano** centra el recinto manteniendo su orientación; **Restablecer vista** recupera posición, zoom y orientación originales. Las etiquetas permanecen legibles y las coordenadas de selección siguen perteneciendo al recinto original.
+La barra de navegación está separada de las herramientas de edición y de las vistas Cobertura/Matriz/Puntos ciegos. **Seleccionar** permite elegir objetos o arrastrar el fondo para desplazar la vista. **Ctrl + rueda** (Cmd en Mac), el pellizco de dos dedos y los botones + y − controlan el zoom; la rueda sola desplaza la página. Los botones de giro cambian la orientación en pasos de 90°, y los de volteo reflejan horizontal o verticalmente. **Ajustar plano** centra el recinto manteniendo su orientación; **Restablecer vista** recupera posición, zoom y orientación originales. Las etiquetas permanecen legibles y las coordenadas de selección siguen perteneciendo al recinto original.
 
 ## Navegación y espacio de trabajo
 
@@ -49,7 +49,7 @@ El espacio de trabajo no tiene barra lateral de navegación. La cabecera reúne 
 
 Debajo del plano están las pestañas **Resumen**, **Análisis** y **Matemáticas**. El plano permanece montado al cambiar de herramienta, conservando su vista y zoom. Resumen combina distribución de superficies, lectura del análisis y cálculos de la cámara elegida. La matriz se muestra exclusivamente mediante **Vista Matriz** sobre el mismo recinto: misma escala, paredes, cámaras y coordenadas. No se recorta ni se representa una submatriz aislada.
 
-En pantallas pequeñas el inspector se ubica debajo del plano. **Proyectos locales**, **Guardar** y **Exportar** permanecen accesibles desde la cabecera del simulador; **Escenarios** se encuentra junto a las pestañas de resultados. Volver al menú no pierde la configuración actual.
+En pantallas pequeñas **Parámetros** abre un panel inferior que se puede cerrar para recuperar el plano. El modo compacto reduce la cabecera y permite mostrar u ocultar los indicadores. **Proyectos locales**, **Guardar** y **Exportar** permanecen accesibles desde la cabecera del simulador; **Escenarios** se encuentra junto a las pestañas de resultados. La navegación respeta Atrás y Adelante del navegador.
 
 La selección y el foco de teclado de las cámaras se dibujan dentro del SVG con tamaños controlados; se desactiva el contorno automático del navegador en los grupos transformados, que podía aparecer como un círculo de tamaño excesivo.
 
@@ -74,7 +74,7 @@ También se incluyen escenarios de oficina, bodega y espacio vacío. Los archivo
 - **Teclado**: enfoca una cámara con Tab; Enter la selecciona y las flechas la desplazan 0,25 m. Supr/Retroceso elimina el objeto enfocado en el plano. Esc cancela el dibujo de pared después de enfocar el plano.
 - **Paredes**: elige Pared y haz clic en ambos extremos. Selecciónalas para editar sus coordenadas o eliminarlas. Son segmentos sin espesor; también representan divisiones u obstáculos lineales.
 - **Punto de prueba**: haz clic en el espacio con Seleccionar; revisa en Matemáticas la distancia, dirección, diferencia angular y bloqueo. También puedes seleccionar el centro de cualquier celda desde la matriz.
-- **Límites**: espacios de 2–50 m por lado, hasta 16 cámaras y 32 paredes, alcance de 0,5–70 m y apertura de 1–170°. Los campos aceptan coma o punto decimal. Se aplican valores numéricos válidos al escribir y se corrigen límites al salir del campo.
+- **Límites**: espacios de 2–50 m por lado, hasta 16 cámaras y 32 paredes, alcance de 0,5–70 m y apertura de 1–170°. Los campos aceptan coma o punto decimal. El valor escrito se confirma con Enter o al salir del campo; los errores se explican junto a él y Escape recupera el valor anterior. Los deslizadores actualizan directamente.
 - **Cambio de dimensiones**: las cámaras se ajustan al nuevo rectángulo. Los extremos de las paredes se ajustan y los segmentos que quedan sin longitud se eliminan.
 - **Zoom y encuadre**: + y − permiten entre 50 % y 400 %. Seleccionar permite arrastrar el fondo para desplazar el encuadre sin mover cámaras; Ajustar plano vuelve a mostrar el recinto completo. X e Y conservan la misma escala. Los ejes tienen tipografía de 12 px y los iconos mantienen su tamaño al ampliar. La regla de metros se calcula a partir de la escala real de pantalla.
 - **Vista Matriz**: cambia entre Cobertura, Matriz y Puntos ciegos desde la barra del plano. Matriz representa las mismas celdas usadas por el cálculo, con filas creciendo desde abajo. Acerca para leer los conteos y selecciona una celda para consultar su valor.
@@ -98,7 +98,19 @@ La visibilidad se verifica por separado: alcance, apertura y paredes anteriores 
 
 **Ejemplo listo para probar:** carga **Escenarios → Triangulación 6–5–5** y abre **Medición**. A = (2; 2), B = (8; 2) y P = (5; 6), extremo inferior de la pared. La base es 6 m y las distancias son 5 m. En modo Ángulos medidos, φ₁ = φ₂ = 53,1301° produce γ = 73,7398° y AP ≈ BP ≈ 5 m.
 
-**Ver cálculo de senos y cosenos** abre el desarrollo dinámico en Matemáticas. El informe TXT incluye los valores de la medición cuando el triángulo está activado y es válido. La selección de cámaras, el punto de prueba y los ángulos de medición son controles de la sesión; el JSON conserva la geometría del proyecto para repetir la medición.
+**Ver cálculo de senos y cosenos** abre el desarrollo dinámico en Matemáticas. El informe TXT incluye los valores de la medición cuando el triángulo está activado y es válido. El proyecto local y el JSON conservan cámaras A/B, punto de prueba, modo, ángulos y lado de la medición. La cámara de los cálculos mantiene su selección aunque se inspeccione otro punto del plano.
+
+## Mejoras de uso de v0.1.8
+
+- Deshacer y rehacer desde la cabecera o con Ctrl/Cmd+Z y Ctrl/Cmd+Mayús+Z; Ctrl/Cmd+Y también rehace. Dentro de campos de texto se conserva la edición normal del navegador.
+- Paredes por dos clics o introduciendo las coordenadas de ambos extremos en un diálogo accesible por teclado.
+- Estado visible de guardado, cambios pendientes y recuperación. Salir sin guardar restaura el último guardado explícito; un proyecto limpio puede salir directamente.
+- Biblioteca con búsqueda, miniaturas y duplicación. Las pestañas fusionan cambios de proyectos distintos y ofrecen abrir la otra versión o conservar una copia si se modifica el mismo proyecto. Se usa Web Locks cuando está disponible; en navegadores sin esa API, la comprobación evita conflictos detectados pero no garantiza exclusión entre escrituras simultáneas.
+- Exportación del plano actual como PNG o SVG, además de JSON, CSV e informe TXT.
+- Cálculo de cobertura en un worker, con indicador mientras se actualiza; los cambios de nombre, color o medición no recalculan la matriz. Hay alternativa local para navegadores sin workers.
+- Índice de Matemáticas con la cámara y el punto actuales, y explicación de que la superposición forma parte de la cobertura.
+
+El detalle de los 23 hallazgos y su verificación está en [docs/UI-UX-v0.1.8.md](docs/UI-UX-v0.1.8.md). La preparación del montaje por audios está en [video/README.md](video/README.md); no genera un video todavía.
 
 ## Modelo matemático
 
@@ -163,7 +175,7 @@ Matemáticas identifica en el título la cámara activa y mantiene un selector d
 
 El modal **Abrir simulador** permite crear un escenario en blanco, cargar guardados o borradores y abrir un ejemplo. Cada nuevo proyecto recibe una identidad independiente y un nombre por defecto con fecha y hora. Los proyectos locales conservan su identidad al reabrirse; guardar de nuevo actualiza la entrada existente.
 
-Al volver al menú o cambiar de proyecto desde el editor aparece **Guardar antes de salir**. Permite confirmar nombre, icono y color, o seguir editando. Guardar solo abandona el editor cuando el almacenamiento local tuvo éxito.
+Al volver al menú o cambiar de proyecto, la primera salida permite definir nombre, icono y color, **Guardar y salir**, **Salir sin guardar** o seguir editando. Descartar un proyecto nuevo elimina su borrador automático. Después del primer guardado aparece una confirmación simple: **Guardar y salir** o **Salir sin guardar**, además de seguir editando. Salir sin guardar restaura la última versión guardada explícitamente, incluidos sus parámetros e identidad. El botón **Guardar** actualiza directamente un proyecto existente; **Propiedades** permite cambiar su nombre, icono y color. Solo se abandona el editor cuando el almacenamiento local confirma el guardado o descarte. El preguardado para recuperar un cierre inesperado se mantiene separado de la última versión guardada explícitamente.
 
 Cada edición se preguarda con sus parámetros actuales; antes del primer guardado explícito aparece como **Borrador automático**. Se escribe también al ocultarse la página y en `pagehide` cuando el navegador dispara esos eventos. Cerrar o recargar la pestaña no muestra confirmaciones nativas: se conserva el preguardado y una escritura de salida sin bloquear la navegación. El navegador no permite un modal personalizado al cerrar la pestaña. Un cierre forzado puede omitir los eventos de salida, por eso la recuperación depende del último preguardado completado, no de un guardado al cerrar.
 

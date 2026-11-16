@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { NumberField } from './Controls.jsx'
+import { NameInput, NumberField } from './Controls.jsx'
 import { navigateTabs } from '../lib/accessibility.js'
 import Icon from './Icon.jsx'
 import { MAX_CAMERAS, MAX_WALLS } from '../lib/project.js'
@@ -20,6 +20,8 @@ export default function Parameters({
   onWall,
   onDelete,
   onAddCamera,
+  onAddWallByCoordinates,
+  onClose,
   onTool,
   frameSettings,
   frameScale,
@@ -47,6 +49,13 @@ export default function Parameters({
       <div className="inspector-heading">
         <Icon name="panel" size={18} />
         <h2>Parámetros</h2>
+        <button
+          className="icon-button mobile-parameters-close"
+          aria-label="Cerrar parámetros"
+          onClick={onClose}
+        >
+          <Icon name="close" size={18} />
+        </button>
         <span>
           {tab === 'space'
             ? 'RECINTO'
@@ -211,7 +220,7 @@ export default function Parameters({
               </select>
             </label>
             {camera ? (
-              <div className="selected-properties">
+              <div className="selected-properties" key={camera.id}>
                 <fieldset className="parameter-group">
                   <legend>Ubicación en el recinto</legend>
                   <div className="field-grid">
@@ -282,10 +291,11 @@ export default function Parameters({
                   <summary>Nombre y opciones</summary>
                   <label className="select-field">
                     <span>Nombre</span>
-                    <input
+                    <NameInput
+                      aria-label="Nombre"
                       value={camera.name}
                       maxLength={60}
-                      onChange={(e) => onCamera(camera.id, { name: e.target.value || 'Cámara' })}
+                      onChange={(name) => onCamera(camera.id, { name })}
                     />
                   </label>
                   <button className="btn danger delete-object" onClick={onDelete}>
@@ -319,6 +329,13 @@ export default function Parameters({
                 Dibujar
               </button>
             </div>
+            <button
+              className="btn"
+              disabled={project.walls.length >= MAX_WALLS}
+              onClick={onAddWallByCoordinates}
+            >
+              Crear por coordenadas
+            </button>
             <label className="select-field object-picker">
               <span>Pared que estás editando</span>
               <select value={wall?.id || ''} onChange={(event) => select(event.target.value)}>

@@ -22,6 +22,75 @@ export function exportProject(project) {
     'application/json',
   )
 }
+export async function exportPlanImage(svg, project, result, format = 'png') {
+  if (!svg) throw new Error('Abre el plano antes de exportarlo.')
+  const ns = 'http://www.w3.org/2000/svg'
+  const copy = svg.cloneNode(true),
+    bounds = svg.getBoundingClientRect()
+  const width = 1600,
+    height = Math.round((width * bounds.height) / bounds.width)
+  copy.setAttribute('x', '0')
+  copy.setAttribute('y', '70')
+  copy.setAttribute('width', width)
+  copy.setAttribute('height', height)
+  copy.setAttribute('font-family', 'Arial, sans-serif')
+  copy.querySelectorAll('.wall-focus-ring,.camera-focus-ring').forEach((e) => e.remove())
+  const wrapper = document.createElementNS(ns, 'svg')
+  wrapper.setAttribute('xmlns', ns)
+  wrapper.setAttribute('width', width)
+  wrapper.setAttribute('height', height + 140)
+  wrapper.setAttribute('viewBox', `0 0 ${width} ${height + 140}`)
+  const background = document.createElementNS(ns, 'rect')
+  background.setAttribute('width', '100%')
+  background.setAttribute('height', '100%')
+  background.setAttribute('fill', '#fff')
+  wrapper.append(background)
+  const text = (y, content, size) => {
+    const t = document.createElementNS(ns, 'text')
+    t.setAttribute('x', '30')
+    t.setAttribute('y', y)
+    t.setAttribute('font-family', 'Arial, sans-serif')
+    t.setAttribute('font-size', size)
+    t.setAttribute('fill', '#172b46')
+    t.textContent = content
+    wrapper.append(t)
+  }
+  text(35, `CamVision · ${project.name} · ${project.space.width} × ${project.space.height} m`, 24)
+  wrapper.append(copy)
+  text(
+    height + 102,
+    `Cobertura ${result.coverage.toFixed(2)} % · Zona ciega ${result.blind.toFixed(2)} % · Celda ${project.space.cellSize} m`,
+    19,
+  )
+  text(
+    height + 127,
+    `Vista del plano actual · Coordenadas en metros · ${new Date().toLocaleDateString('es-CL')}`,
+    16,
+  )
+  const content = new XMLSerializer().serializeToString(wrapper)
+  if (format === 'svg') {
+    download(content, 'camvision-plano.svg', 'image/svg+xml')
+    return
+  }
+  const url = URL.createObjectURL(new Blob([content], { type: 'image/svg+xml' }))
+  try {
+    const image = new Image()
+    await new Promise((resolve, reject) => {
+      image.onload = resolve
+      image.onerror = reject
+      image.src = url
+    })
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height + 140
+    canvas.getContext('2d').drawImage(image, 0, 0)
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'))
+    if (!blob) throw new Error('No se pudo crear la imagen.')
+    download(blob, 'camvision-plano.png', 'image/png')
+  } finally {
+    URL.revokeObjectURL(url)
+  }
+}
 export function exportMatrix(project, result) {
   const lines = ['fila_y_desde_abajo,columna_x,centro_x_m,centro_y_m,area_celda_m2,camaras']
   result.matrix.forEach((row, r) =>

@@ -1,4 +1,5 @@
 import { clamp } from './geometry.js'
+import { normalizeMeasurement } from './measurement.js'
 export const COLORS = ['#27786b', '#d18a3f', '#5773b8', '#9e68aa', '#358b9b', '#b56857']
 export const MAX_CAMERAS = 16,
   MAX_WALLS = 32
@@ -185,5 +186,8 @@ export function validateProject(value) {
       color,
     })),
     walls: walls.map(({ id, a, b }) => ({ id, a: { x: a.x, y: a.y }, b: { x: b.x, y: b.y } })),
+    ...(value.measurement === undefined
+      ? {}
+      : { measurement: normalizeMeasurement(value.measurement, cameras, walls, space) }),
   }
 }

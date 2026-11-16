@@ -35,6 +35,8 @@ export default function Plan({
   inspector,
   triangulation,
   measurementPick,
+  calculating,
+  onParameters,
 }) {
   const { space, cameras, walls } = project
   const [canvasRef, size] = useElementSize()
@@ -42,6 +44,24 @@ export default function Plan({
     dragRef = useRef(null),
     panRef = useRef(null),
     suppressClick = useRef(false)
+  const touches = useRef(new Map()),
+    pinch = useRef(null),
+    moveFrame = useRef(null),
+    queuedMove = useRef(null)
+  useEffect(() => () => cancelAnimationFrame(moveFrame.current), [])
+  const flushMove = () => {
+    cancelAnimationFrame(moveFrame.current)
+    moveFrame.current = null
+    if (queuedMove.current) {
+      const m = queuedMove.current
+      queuedMove.current = null
+      onMove(m.id, m.point, { group: m.group })
+    }
+  }
+  const queueMove = (id, point, group) => {
+    queuedMove.current = { id, point, group }
+    if (!moveFrame.current) moveFrame.current = requestAnimationFrame(flushMove)
+  }
   const [cursor, setCursor] = useState(null),
     [grid, setGrid] = useState(true),
     [panning, setPanning] = useState(false)
@@ -55,6 +75,7 @@ export default function Plan({
   useEffect(() => {
     const canvas = canvasRef.current
     const wheel = (event) => {
+      if (!event.ctrlKey && !event.metaKey) return
       event.preventDefault()
       const next = clamp(zoom * Math.exp(-event.deltaY * 0.002), 0.5, 4)
       const bounds = canvas.getBoundingClientRect()
@@ -153,11 +174,14 @@ export default function Plan({
         <div className="plan-heading-meta">
           <span className="live">
             <i />
-            Cálculo en tiempo real
+            {calculating ? 'Actualizando estimación…' : 'Cálculo en tiempo real'}
           </span>
           <span>Origen (0, 0) · metros</span>
         </div>
       </div>
+      <button className="mobile-panel-toggle" onClick={onParameters}>
+        Parámetros del plano
+      </button>
       <div className="plan-toolbar">
         <div className="drawing-tools" role="group" aria-label="Herramientas de dibujo">
           {[
@@ -278,8 +302,26 @@ export default function Plan({
             <svg
               className="floor-plan"
               tabIndex={0}
-              onPointerDownCapture={() => {
+              onPointerDownCapture={(event) => {
                 suppressClick.current = false
+                if (event.pointerType === 'touch') {
+                  touches.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
+                  if (touches.current.size === 2) {
+                    const [a, b] = [...touches.current.values()]
+                    pinch.current = {
+                      distance: Math.hypot(a.x - b.x, a.y - b.y),
+                      center: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 },
+                      zoom,
+                      pan: { ...pan },
+                      u,
+                    }
+                    dragRef.current = null
+                    panRef.current = null
+                    event.currentTarget.setPointerCapture(event.pointerId)
+                    event.stopPropagation()
+                    event.preventDefault()
+                  }
+                }
               }}
               onClickCapture={(event) => {
                 if (suppressClick.current) {
@@ -304,6 +346,25 @@ export default function Plan({
               role="group"
               aria-label="Plano interactivo: con Seleccionar, arrastra una cámara para moverla o el fondo para desplazar la vista"
               onPointerMove={(event) => {
+                if (event.pointerType === 'touch' && touches.current.has(event.pointerId))
+                  touches.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
+                if (pinch.current && touches.current.size >= 2) {
+                  const [a, b] = [...touches.current.values()],
+                    start = pinch.current
+                  const next = clamp(
+                    (start.zoom * Math.hypot(a.x - b.x, a.y - b.y)) / Math.max(1, start.distance),
+                    0.5,
+                    4,
+                  )
+                  const center = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
+                  setZoom(next)
+                  setPan({
+                    x: start.pan.x - (center.x - start.center.x) * start.u,
+                    y: start.pan.y - (center.y - start.center.y) * start.u,
+                  })
+                  suppressClick.current = true
+                  return
+                }
                 if (panRef.current) {
                   const start = panRef.current
                   if (
@@ -325,18 +386,29 @@ export default function Plan({
                 const p = position(event)
                 setCursor(p)
                 if (dragRef.current)
-                  onMove(dragRef.current.id, {
-                    x: clamp(p.x - dragRef.current.offset.x, 0, space.width),
-                    y: clamp(p.y - dragRef.current.offset.y, 0, space.height),
-                  })
+                  queueMove(
+                    dragRef.current.id,
+                    {
+                      x: clamp(p.x - dragRef.current.offset.x, 0, space.width),
+                      y: clamp(p.y - dragRef.current.offset.y, 0, space.height),
+                    },
+                    dragRef.current.group,
+                  )
               }}
-              onPointerUp={() => {
-                suppressClick.current = !!panRef.current?.moved
+              onPointerUp={(event) => {
+                flushMove()
+                suppressClick.current =
+                  suppressClick.current || !!pinch.current || !!panRef.current?.moved
+                touches.current.delete(event.pointerId)
+                pinch.current = null
                 setPanning(false)
                 dragRef.current = null
                 panRef.current = null
               }}
               onPointerCancel={() => {
+                flushMove()
+                touches.current.clear()
+                pinch.current = null
                 suppressClick.current = false
                 setPanning(false)
                 dragRef.current = null
@@ -533,7 +605,7 @@ export default function Plan({
                         x2={wall.b.x}
                         y2={wall.b.y}
                         stroke="transparent"
-                        strokeWidth="14"
+                        strokeWidth="26"
                         vectorEffect="non-scaling-stroke"
                       />
                       <line
@@ -572,6 +644,7 @@ export default function Plan({
                         const p = position(event)
                         dragRef.current = {
                           id: camera.id,
+                          group: `drag:${camera.id}:${event.timeStamp}`,
                           offset: { x: p.x - camera.x, y: p.y - camera.y },
                         }
                         event.currentTarget.setPointerCapture(event.pointerId)
@@ -828,7 +901,7 @@ export default function Plan({
               ? 'Haz clic en el recinto para instalar una cámara'
               : layer === 'matrix'
                 ? 'Haz clic en una celda para consultar su conteo y coordenadas'
-                : 'Seleccionar: arrastra una cámara o el fondo · Rueda para zoom'}
+                : 'Seleccionar: arrastra una cámara o el fondo · Ctrl + rueda / pellizco para zoom'}
         </span>
         <code>
           {cursor

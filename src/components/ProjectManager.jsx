@@ -1,7 +1,8 @@
-import { useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import Icon from './Icon.jsx'
 import { PROJECT_ICONS, PROJECT_COLORS, SCENARIOS } from '../lib/project.js'
 import { navigateTabs } from '../lib/accessibility.js'
+import { stableStringify } from '../lib/storage.js'
 
 const iconLabels = {
   folder: 'Carpeta',
@@ -25,29 +26,97 @@ export function ProjectBadge({ project, size = 20 }) {
 }
 
 export function LocalProjects({ library, onOpen, onDelete }) {
+  const [query, setQuery] = useState('')
+  const entries = library.filter((entry) =>
+    entry.project.name.toLocaleLowerCase('es').includes(query.toLocaleLowerCase('es')),
+  )
   return (
     <div className="local-projects">
+      {library.length > 0 && (
+        <label className="project-search">
+          Buscar proyecto
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Nombre del proyecto"
+          />
+        </label>
+      )}
+      {library.length > 0 && !entries.length && (
+        <p className="project-empty">No hay proyectos que coincidan con la búsqueda.</p>
+      )}
       {!library.length && (
         <p className="project-empty">
           Todavía no hay proyectos locales. Crea uno en blanco o abre un ejemplo.
         </p>
       )}
-      {library.map((entry) => (
+      {entries.map((entry) => (
         <div className="local-project-row" key={entry.id}>
           <button
             className="local-project-open"
             onClick={() => onOpen(entry.project, { fresh: false })}
           >
             <ProjectBadge project={entry.project} />
+            <svg
+              className="project-preview"
+              viewBox={`-1 -1 ${entry.project.space.width + 2} ${entry.project.space.height + 2}`}
+              aria-hidden="true"
+            >
+              <rect
+                width={entry.project.space.width}
+                height={entry.project.space.height}
+                fill="white"
+                stroke="#7187a0"
+                strokeWidth=".2"
+              />
+              {entry.project.walls.map((w) => (
+                <line
+                  key={w.id}
+                  x1={w.a.x}
+                  y1={entry.project.space.height - w.a.y}
+                  x2={w.b.x}
+                  y2={entry.project.space.height - w.b.y}
+                  stroke="#435774"
+                  strokeWidth=".35"
+                />
+              ))}
+              {entry.project.cameras.map((c) => (
+                <circle
+                  key={c.id}
+                  cx={c.x}
+                  cy={entry.project.space.height - c.y}
+                  r=".5"
+                  fill={c.color}
+                />
+              ))}
+            </svg>
             <span>
               <strong>{entry.project.name}</strong>
               <small>
-                {entry.draft ? 'Borrador automático' : 'Guardado'} · {entry.project.space.width} ×{' '}
-                {entry.project.space.height} m · {entry.project.cameras.length} cámaras
+                {entry.draft
+                  ? 'Borrador automático'
+                  : entry.savedProject &&
+                      stableStringify(entry.savedProject) !== stableStringify(entry.project)
+                    ? 'Cambios pendientes · recuperación automática'
+                    : 'Guardado confirmado'}{' '}
+                · {entry.project.space.width} × {entry.project.space.height} m ·{' '}
+                {entry.project.cameras.length} cámaras
               </small>
-              <small>{new Date(entry.savedAt).toLocaleString('es-CL')}</small>
+              <small>Última actividad: {new Date(entry.savedAt).toLocaleString('es-CL')}</small>
             </span>
             <Icon name="chevron" size={15} />
+          </button>
+          <button
+            className="project-copy"
+            aria-label={`Duplicar proyecto ${entry.project.name}`}
+            onClick={() =>
+              onOpen(
+                { ...entry.project, name: `${entry.project.name.slice(0, 70)} (copia)` },
+                { fresh: true },
+              )
+            }
+          >
+            Duplicar
           </button>
           {onDelete && (
             <button
@@ -164,32 +233,86 @@ export function ProjectLauncher({ library, project, onOpen, onImport }) {
   )
 }
 
-export function SaveProjectForm({ project, leaving, onSave, onCancel }) {
+export function ExitProjectPrompt({ project, onSave, onDiscard, onCancel }) {
+  const [error, setError] = useState('')
+  const [pending, setPending] = useState(false)
+  const cancelRef = useRef(null)
+  useEffect(() => {
+    cancelRef.current?.focus()
+  }, [])
+  const run = async (action) => {
+    setPending(true)
+    const message = await action()
+    setPending(false)
+    if (message) setError(message)
+  }
+  return (
+    <div className="project-save-form">
+      <p className="dialog-description">
+        ¿Guardar los cambios de «{project.name}» antes de salir? Si sales sin guardar, se recuperará
+        la última versión que guardaste.
+      </p>
+      {error && (
+        <p className="project-save-error" role="alert">
+          {error}
+        </p>
+      )}
+      <div className="project-form-actions" inert={pending} aria-busy={pending}>
+        <button ref={cancelRef} className="btn" onClick={onCancel}>
+          Seguir editando
+        </button>
+        <button className="btn" onClick={() => run(onDiscard)}>
+          Salir sin guardar
+        </button>
+        <button className="btn primary" onClick={() => run(onSave)}>
+          Guardar y salir
+        </button>
+      </div>
+    </div>
+  )
+}
+
+export function SaveProjectForm({
+  project,
+  leaving,
+  editingProperties,
+  onSave,
+  onDiscard,
+  onCancel,
+}) {
   const nameRef = useRef(null)
   const errorId = useId()
   const [name, setName] = useState(project.name)
   const [icon, setIcon] = useState(project.icon || 'folder')
   const [color, setColor] = useState(project.color || PROJECT_COLORS[0])
   const [error, setError] = useState('')
+  const [pending, setPending] = useState(false)
+  useEffect(() => {
+    nameRef.current?.focus()
+  }, [])
   return (
     <form
       className="project-save-form"
       noValidate
-      onSubmit={(event) => {
+      onSubmit={async (event) => {
         event.preventDefault()
         if (!name.trim()) {
           setError('Escribe un nombre para el proyecto.')
           nameRef.current?.focus()
           return
         }
-        const message = onSave({ name: name.trim(), icon, color })
+        setPending(true)
+        const message = await onSave({ name: name.trim(), icon, color })
+        setPending(false)
         if (message) setError(message)
       }}
     >
       <p className="dialog-description">
         {leaving
-          ? 'Guarda los datos del proyecto antes de salir del simulador.'
-          : 'Define cómo aparecerá el proyecto en tus guardados locales.'}
+          ? 'Guarda el proyecto con un nombre, icono y color, o sal sin guardar para descartar este borrador.'
+          : editingProperties
+            ? 'Cambia el nombre, icono y color del proyecto. Guardar también conserva los cambios actuales del plano.'
+            : 'Define cómo aparecerá el proyecto en tus guardados locales.'}
       </p>
       <label className="project-name-field">
         <span>Nombre del proyecto</span>
@@ -256,13 +379,27 @@ export function SaveProjectForm({ project, leaving, onSave, onCancel }) {
           {error}
         </p>
       )}
-      <div className="project-form-actions">
+      <div className="project-form-actions" inert={pending} aria-busy={pending}>
         <button type="button" className="btn" onClick={onCancel}>
           {leaving ? 'Seguir editando' : 'Cancelar'}
         </button>
+        {leaving && (
+          <button
+            type="button"
+            className="btn"
+            onClick={async () => {
+              setPending(true)
+              const message = await onDiscard()
+              setPending(false)
+              if (message) setError(message)
+            }}
+          >
+            Salir sin guardar
+          </button>
+        )}
         <button className="btn primary" type="submit">
           <Icon name="save" size={15} />
-          {leaving ? 'Guardar y continuar' : 'Guardar proyecto'}
+          {leaving ? 'Guardar y salir' : editingProperties ? 'Guardar cambios' : 'Guardar proyecto'}
         </button>
       </div>
     </form>

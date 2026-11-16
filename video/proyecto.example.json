@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "title": "CamVision",
+  "max_seconds": 600,
+  "sections": [
+    {
+      "id": "01",
+      "title": "Presentación",
+      "audio": "material/audio/01.mp3",
+      "visuals": ["material/visual/01.png"]
+    },
+    {
+      "id": "02",
+      "title": "Problema y objetivo",
+      "audio": "material/audio/02.mp3",
+      "visuals": ["material/visual/02.png"]
+    },
+    {
+      "id": "03",
+      "title": "Metodología y justificación",
+      "audio": "material/audio/03.mp3",
+      "visuals": ["material/visual/03.png"]
+    },
+    {
+      "id": "04",
+      "title": "Plano y parámetros",
+      "audio": "material/audio/04.mp3",
+      "visuals": ["material/visual/04.mp4"]
+    },
+    {
+      "id": "05",
+      "title": "Trigonometría y paredes",
+      "audio": "material/audio/05.mp3",
+      "visuals": ["material/visual/05.mp4"]
+    },
+    {
+      "id": "06",
+      "title": "Matriz y superficies",
+      "audio": "material/audio/06.mp3",
+      "visuals": ["material/visual/06.mp4"]
+    },
+    {
+      "id": "07",
+      "title": "Triangulación",
+      "audio": "material/audio/07.mp3",
+      "visuals": ["material/visual/07.mp4"]
+    },
+    {
+      "id": "08",
+      "title": "Resultados y conclusiones",
+      "audio": "material/audio/08.mp3",
+      "visuals": ["material/visual/08.png"]
+    },
+    {
+      "id": "09",
+      "title": "Aporte a la carrera",
+      "audio": "material/audio/09.mp3",
+      "visuals": ["material/visual/09.png"]
+    },
+    {
+      "id": "10",
+      "title": "Fuentes y cierre",
+      "audio": "material/audio/10.mp3",
+      "visuals": ["material/visual/10.png"]
+    }
+  ]
+}
